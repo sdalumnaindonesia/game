@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Matematika Seru</title>
+    <!-- Memuat Tailwind CSS untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memuat font ramah anak dari Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #87CEEB; /* Warna langit biru cerah */
+            background-image: radial-gradient(#ffffff 20%, transparent 20%), radial-gradient(#ffffff 20%, transparent 20%);
+            background-color: #87CEEB;
+            background-position: 0 0, 50px 50px;
+            background-size: 100px 100px;
+            overflow-x: hidden;
+        }
+
+        /* Efek bayangan bergaya pop-out untuk elemen */
+        .pop-shadow {
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        
+        .pop-shadow:active {
+            transform: translateY(8px);
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* Animasi saat jawaban salah */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Animasi saat jawaban benar */
+        @keyframes bounce-scale {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .bounce-animation {
+            animation: bounce-scale 0.5s ease-in-out;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="game-container" class="max-w-md w-full bg-white rounded-3xl p-6 md:p-8 pop-shadow text-center relative z-10 border-4 border-white">
+        
+        <!-- Layar Mulai -->
+        <div id="start-screen" class="flex flex-col items-center">
+            <h1 class="text-4xl md:text-5xl font-black text-blue-500 mb-6 drop-shadow-sm leading-tight">
+                Matematika <br> <span class="text-yellow-400">Seru!</span> 🌟
+            </h1>
+            <img src="https://placehold.co/150x150/ffde59/ffffff?text=🚀" alt="Roket" class="rounded-full mb-6 pop-shadow" onerror="this.style.display='none'">
+            <p class="text-gray-600 mb-8 text-lg">Ayo belajar berhitung sambil bermain!</p>
+            <button onclick="startGame()" class="w-full bg-green-400 hover:bg-green-500 text-white text-2xl font-black py-4 px-6 rounded-2xl pop-shadow">
+                MULAI MAIN
+            </button>
+        </div>
+
+        <!-- Layar Permainan (Awalnya Disembunyikan) -->
+        <div id="play-screen" class="hidden flex-col items-center w-full">
+            
+            <!-- Header Informasi Skor -->
+            <div class="flex justify-between w-full mb-6 items-center">
+                <div class="bg-blue-100 text-blue-600 px-4 py-2 rounded-xl font-bold text-xl pop-shadow">
+                    ⭐ Skor: <span id="score">0</span>
+                </div>
+                <button onclick="showStartScreen()" class="bg-red-400 text-white px-4 py-2 rounded-xl font-bold pop-shadow text-sm">
+                    Keluar
+                </button>
+            </div>
+
+            <!-- Area Soal -->
+            <div id="question-box" class="bg-yellow-300 w-full rounded-2xl p-8 mb-8 pop-shadow">
+                <h2 id="question-text" class="text-5xl md:text-6xl font-black text-gray-800 tracking-wider">
+                    5 + 3 = ?
+                </h2>
+            </div>
+
+            <!-- Umpan Balik (Benar/Salah) -->
+            <div id="feedback-message" class="h-10 text-2xl font-bold mb-4 opacity-0 transition-opacity duration-300">
+                Pesan
+            </div>
+
+            <!-- Pilihan Jawaban -->
+            <div id="options-grid" class="grid grid-cols-2 gap-4 w-full">
+                <!-- Tombol pilihan akan dihasilkan oleh JavaScript -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Inisialisasi variabel game
+        let score = 0;
+        let correctAnswer = 0;
+        let audioCtx;
+        
+        // Warna cerah untuk tombol jawaban
+        const buttonColors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-purple-400'];
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playDing() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function playBuzz() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+            
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function startGame() {
+            initAudio(); // Harus dipanggil setelah user interaksi
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('play-screen').classList.remove('hidden');
+            document.getElementById('play-screen').classList.add('flex');
+            score = 0;
+            updateScoreDisplay();
+            generateQuestion();
+        }
+
+        function showStartScreen() {
+            document.getElementById('play-screen').classList.add('hidden');
+            document.getElementById('play-screen').classList.remove('flex');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateQuestion() {
+            const operations = ['+', '-', 'x', '÷'];
+            const operator = operations[Math.floor(Math.random() * operations.length)];
+            let num1, num2, answer;
+
+            switch (operator) {
+                case '+':
+                    num1 = getRandomInt(1, 20);
+                    num2 = getRandomInt(1, 20);
+                    answer = num1 + num2;
+                    break;
+                case '-':
+                    num1 = getRandomInt(10, 30);
+                    num2 = getRandomInt(1, num1); // Hindari hasil negatif
+                    answer = num1 - num2;
+                    break;
+                case 'x':
+                    num1 = getRandomInt(2, 10);
+                    num2 = getRandomInt(2, 10);
+                    answer = num1 * num2;
+                    break;
+                case '÷':
+                    num2 = getRandomInt(2, 10);
+                    answer = getRandomInt(2, 10);
+                    num1 = num2 * answer; // Pastikan hasilnya bilangan bulat
+                    break;
+            }
+
+            correctAnswer = answer;
+            document.getElementById('question-text').innerText = `${num1} ${operator} ${num2}`;
+
+            generateOptions(answer);
+            
+            // Kembalikan tampilan UI seperti semula
+            const qBox = document.getElementById('question-box');
+            qBox.classList.remove('shake-animation', 'bounce-animation');
+            document.getElementById('feedback-message').style.opacity = '0';
+        }
+
+        function generateOptions(correct) {
+            let options = new Set([correct]);
+            
+            // Buat 3 jawaban salah yang masuk akal
+            while(options.size < 4) {
+                let offset = getRandomInt(-5, 5);
+                if (offset === 0) offset = 1;
+                let wrongAnswer = correct + offset;
+                
+                if (wrongAnswer >= 0) { // Hanya izinkan opsi positif
+                    options.add(wrongAnswer);
+                }
+            }
+
+            // Ubah Set ke Array dan acak posisinya
+            let optionsArray = Array.from(options);
+            optionsArray.sort(() => Math.random() - 0.5);
+
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = ''; // Bersihkan opsi sebelumnya
+
+            optionsArray.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                // Mengambil warna berbeda untuk tiap tombol
+                const colorClass = buttonColors[index % buttonColors.length];
+                
+                btn.className = `${colorClass} text-white font-bold text-3xl py-6 rounded-2xl pop-shadow transform transition active:scale-95`;
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, btn);
+                grid.appendChild(btn);
+            });
+        }
+
+        let isProcessing = false;
+
+        function checkAnswer(selected, buttonElement) {
+            if (isProcessing) return; // Cegah klik ganda cepat
+            isProcessing = true;
+
+            const qBox = document.getElementById('question-box');
+            const feedback = document.getElementById('feedback-message');
+
+            if (selected === correctAnswer) {
+                // Jawaban Benar
+                playDing();
+                score += 10;
+                updateScoreDisplay();
+                
+                qBox.classList.add('bounce-animation');
+                feedback.innerText = "Yey! Hebat! 🎉";
+                feedback.className = "h-10 text-2xl font-bold mb-4 text-green-500 transition-opacity duration-300";
+                feedback.style.opacity = '1';
+
+                // Lanjut soal berikutnya
+                setTimeout(() => {
+                    generateQuestion();
+                    isProcessing = false;
+                }, 1000);
+
+            } else {
+                // Jawaban Salah
+                playBuzz();
+                
+                qBox.classList.add('shake-animation');
+                feedback.innerText = "Ups! Coba lagi ya! 💪";
+                feedback.className = "h-10 text-2xl font-bold mb-4 text-red-500 transition-opacity duration-300";
+                feedback.style.opacity = '1';
+                
+                // Hapus kelas animasi agar bisa diputar lagi jika salah berturut-turut
+                setTimeout(() => {
+                    qBox.classList.remove('shake-animation');
+                    isProcessing = false;
+                }, 500);
+            }
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score').innerText = score;
+        }
+
+    </script>
+</body>
+</html>

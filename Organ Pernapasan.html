@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Game Edukasi: Organ Pernapasan Manusia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #e0f2fe; /* Light blue sky */
+            background-image: radial-gradient(#bae6fd 20%, transparent 20%), radial-gradient(#bae6fd 20%, transparent 20%);
+            background-position: 0 0, 25px 25px;
+            background-size: 50px 50px;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        .draggable {
+            touch-action: none; /* Crucial for custom pointer drag on mobile */
+            user-select: none;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: transform;
+        }
+
+        .draggable.dragging {
+            transition: none; /* Remove transition during active dragging */
+            z-index: 50;
+            opacity: 0.95;
+            box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+        }
+
+        .dropzone-active {
+            background-color: rgba(254, 240, 138, 0.5); /* Yellow tint when hovering */
+            border-color: #eab308;
+            transform: scale(1.05);
+        }
+
+        /* Animations */
+        @keyframes wobble {
+            0%, 100% { transform: translateX(0); }
+            15% { transform: translateX(-10px) rotate(-5deg); }
+            30% { transform: translateX(10px) rotate(5deg); }
+            45% { transform: translateX(-10px) rotate(-3deg); }
+            60% { transform: translateX(10px) rotate(3deg); }
+            75% { transform: translateX(-5px) rotate(-1deg); }
+        }
+        .wobble-error {
+            animation: wobble 0.5s ease-in-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-in {
+            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(-10vh) rotate(0deg); }
+            100% { transform: translateY(110vh) rotate(720deg); }
+        }
+        .confetti-piece {
+            position: fixed;
+            top: -10px;
+            width: 12px;
+            height: 24px;
+            border-radius: 4px;
+            z-index: 100;
+            animation: confettiFall linear forwards;
+        }
+
+        /* SVG Line Animation */
+        .dash-line {
+            stroke-dasharray: 8, 8;
+            animation: dash 2s linear infinite;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: -16; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 py-8">
+
+    <div class="max-w-3xl w-full bg-white rounded-[2rem] shadow-2xl border-8 border-sky-300 p-4 md:p-8 relative overflow-hidden">
+        
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-3xl md:text-5xl font-black text-sky-600 drop-shadow-sm mb-2">
+                Kenali Organ Pernapasan! 🌬️
+            </h1>
+            <p class="text-gray-600 font-bold text-lg">
+                Tarik (Drag) nama organ ke kotak yang tepat pada gambar!
+            </p>
+        </div>
+
+        <!-- Feedback Overlay (Hidden by default) -->
+        <div id="success-message" class="hidden absolute inset-0 bg-white/80 z-40 flex-col items-center justify-center backdrop-blur-sm rounded-3xl">
+            <h2 class="text-5xl font-black text-green-500 mb-4 pop-in drop-shadow-md">Hebat Sekali! 🎉</h2>
+            <p class="text-xl font-bold text-gray-700 pop-in mb-6" style="animation-delay: 0.1s;">Kamu berhasil mengenali semua organ pernapasan!</p>
+            <button onclick="resetGame()" class="pop-in bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-black text-2xl py-3 px-8 rounded-2xl shadow-[0_6px_0_#ca8a04] active:shadow-none active:translate-y-1 transition-all" style="animation-delay: 0.2s;">
+                Main Lagi 🔄
+            </button>
+        </div>
+
+        <!-- Game Area: SVG Container with Aspect Ratio (Square) -->
+        <div class="relative w-full aspect-square md:aspect-[4/3] bg-sky-50 rounded-2xl border-4 border-dashed border-sky-200 mb-6 flex-shrink-0" id="game-board">
+            
+            <!-- Inline SVG Diagram -->
+            <!-- ViewBox is 600x600 for easy percentage math for dropzones -->
+            <svg viewBox="0 0 600 600" class="absolute inset-0 w-full h-full drop-shadow-md" preserveAspectRatio="xMidYMid meet">
+                
+                <!-- Body Silhouette Base -->
+                <path d="M220,170 L280,170 L280,250 L220,250 Z" fill="#fde68a" stroke="#d97706" stroke-width="4"/> <!-- Neck -->
+                <path d="M150,220 C150,220 350,220 350,220 C380,220 410,280 410,350 L410,580 L90,580 L90,350 C90,280 120,220 150,220 Z" fill="#fde68a" stroke="#d97706" stroke-width="4"/> <!-- Torso -->
+                <circle cx="250" cy="110" r="70" fill="#fde68a" stroke="#d97706" stroke-width="4"/> <!-- Head -->
+                
+                <!-- Cute Face Detail -->
+                <circle cx="230" cy="90" r="6" fill="#475569"/>
+                <circle cx="270" cy="90" r="6" fill="#475569"/>
+                <path d="M 240 130 Q 250 145 260 130" stroke="#d97706" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+                <!-- ORGAN 1: Hidung (Nose) -->
+                <path d="M245,100 L255,115 L245,115 Z" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+                <circle cx="250" cy="108" r="12" fill="#f59e0b" stroke="#b45309" stroke-width="2" opacity="0.5"/>
+                <!-- Pointer Line -->
+                <polyline points="260,105 340,105 340,90 380,90" fill="none" stroke="#475569" stroke-width="4" class="dash-line" stroke-linecap="round" stroke-linejoin="round"/>
+
+                <!-- ORGAN 2: Trakea (Trachea) -->
+                <!-- Base Tube -->
+                <rect x="240" y="160" width="20" height="85" rx="8" fill="#93c5fd" stroke="#2563eb" stroke-width="4"/>
+                <!-- Cartilage Rings -->
+                <line x1="240" y1="175" x2="260" y2="175" stroke="#2563eb" stroke-width="3"/>
+                <line x1="240" y1="195" x2="260" y2="195" stroke="#2563eb" stroke-width="3"/>
+                <line x1="240" y1="215" x2="260" y2="215" stroke="#2563eb" stroke-width="3"/>
+                <!-- Pointer Line -->
+                <polyline points="260,200 340,200 340,210 380,210" fill="none" stroke="#475569" stroke-width="4" class="dash-line" stroke-linecap="round" stroke-linejoin="round"/>
+
+                <!-- ORGAN 3: Paru-paru (Lungs) -->
+                <g filter="drop-shadow(0px 2px 2px rgba(0,0,0,0.1))">
+                    <path d="M 235 240 C 185 220 145 310 165 410 C 185 440 225 420 235 380 Z" fill="#f9a8d4" stroke="#db2777" stroke-width="4" stroke-linejoin="round"/>
+                    <path d="M 265 240 C 315 220 355 310 335 410 C 315 440 275 420 265 380 Z" fill="#f9a8d4" stroke="#db2777" stroke-width="4" stroke-linejoin="round"/>
+                </g>
+                <!-- Pointer Line -->
+                <polyline points="330,320 350,320 350,330 380,330" fill="none" stroke="#475569" stroke-width="4" class="dash-line" stroke-linecap="round" stroke-linejoin="round"/>
+
+                <!-- ORGAN 4: Diafragma (Diaphragm) -->
+                <path d="M 155 420 Q 250 380 345 420 L 345 440 Q 250 400 155 440 Z" fill="#c4b5fd" stroke="#7c3aed" stroke-width="4" stroke-linejoin="round"/>
+                <!-- Pointer Line -->
+                <polyline points="340,430 360,430 360,450 380,450" fill="none" stroke="#475569" stroke-width="4" class="dash-line" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+
+            <!-- Dropzones (Absolute positioned to align with SVG line ends) -->
+            <!-- 64% Left starts exactly after X=384 in the 600 width viewBox. -->
+            
+            <!-- Target: Hidung -->
+            <div class="dropzone absolute border-4 border-dashed border-slate-300 rounded-xl bg-white/50 flex items-center justify-center transition-all duration-200 z-10"
+                 data-target="hidung"
+                 style="left: 65%; top: 10%; width: 32%; height: 12%;">
+                <span class="text-slate-400 font-black text-sm md:text-xl pointer-events-none dropzone-hint">Tempatkan Di Sini</span>
+            </div>
+
+            <!-- Target: Trakea -->
+            <div class="dropzone absolute border-4 border-dashed border-slate-300 rounded-xl bg-white/50 flex items-center justify-center transition-all duration-200 z-10"
+                 data-target="trakea"
+                 style="left: 65%; top: 30%; width: 32%; height: 12%;">
+                <span class="text-slate-400 font-black text-sm md:text-xl pointer-events-none dropzone-hint">Tempatkan Di Sini</span>
+            </div>
+
+            <!-- Target: Paru-paru -->
+            <div class="dropzone absolute border-4 border-dashed border-slate-300 rounded-xl bg-white/50 flex items-center justify-center transition-all duration-200 z-10"
+                 data-target="paru"
+                 style="left: 65%; top: 50%; width: 32%; height: 12%;">
+                <span class="text-slate-400 font-black text-sm md:text-xl pointer-events-none dropzone-hint">Tempatkan Di Sini</span>
+            </div>
+
+            <!-- Target: Diafragma -->
+            <div class="dropzone absolute border-4 border-dashed border-slate-300 rounded-xl bg-white/50 flex items-center justify-center transition-all duration-200 z-10"
+                 data-target="diafragma"
+                 style="left: 65%; top: 70%; width: 32%; height: 12%;">
+                <span class="text-slate-400 font-black text-sm md:text-xl pointer-events-none dropzone-hint">Tempatkan Di Sini</span>
+            </div>
+        </div>
+
+        <!-- Draggable Labels Container -->
+        <div id="labels-pool" class="flex flex-wrap justify-center gap-4 min-h-[80px] p-2 rounded-2xl bg-slate-100 border-4 border-slate-200 relative z-20">
+            
+            <div class="draggable flex items-center justify-center bg-orange-400 text-white font-black text-lg md:text-2xl px-4 py-2 rounded-xl shadow-[0_6px_0_#c2410c] border-2 border-orange-200 cursor-grab active:cursor-grabbing w-[120px] md:w-[160px] h-[50px] md:h-[60px]"
+                 data-id="hidung">
+                Hidung
+            </div>
+
+            <div class="draggable flex items-center justify-center bg-purple-400 text-white font-black text-lg md:text-2xl px-4 py-2 rounded-xl shadow-[0_6px_0_#7e22ce] border-2 border-purple-200 cursor-grab active:cursor-grabbing w-[120px] md:w-[160px] h-[50px] md:h-[60px]"
+                 data-id="diafragma">
+                Diafragma
+            </div>
+            
+            <div class="draggable flex items-center justify-center bg-blue-400 text-white font-black text-lg md:text-2xl px-4 py-2 rounded-xl shadow-[0_6px_0_#1d4ed8] border-2 border-blue-200 cursor-grab active:cursor-grabbing w-[120px] md:w-[160px] h-[50px] md:h-[60px]"
+                 data-id="trakea">
+                Trakea
+            </div>
+
+            <div class="draggable flex items-center justify-center bg-pink-400 text-white font-black text-lg md:text-2xl px-4 py-2 rounded-xl shadow-[0_6px_0_#be185d] border-2 border-pink-200 cursor-grab active:cursor-grabbing w-[120px] md:w-[160px] h-[50px] md:h-[60px]"
+                 data-id="paru">
+                Paru-paru
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Web Audio API Setup
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+
+            if (type === 'success') {
+                // Happy Ding
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'error') {
+                // Buzz
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'win') {
+                // Tada Chord
+                const freqs = [523.25, 659.25, 783.99, 1046.50]; // C Major arpeggio
+                freqs.forEach((f, i) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.connect(g);
+                    g.connect(audioCtx.destination);
+                    o.type = 'triangle';
+                    o.frequency.value = f;
+                    const startTime = now + (i * 0.1);
+                    g.gain.setValueAtTime(0, startTime);
+                    g.gain.linearRampToValueAtTime(0.15, startTime + 0.05);
+                    g.gain.exponentialRampToValueAtTime(0.01, startTime + 0.8);
+                    o.start(startTime);
+                    o.stop(startTime + 0.8);
+                });
+            }
+        }
+
+        // Confetti System
+        function createConfetti() {
+            const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+            for (let i = 0; i < 60; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti-piece';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                conf.style.animationDelay = (Math.random() * 0.5) + 's';
+                document.body.appendChild(conf);
+                
+                // Cleanup
+                setTimeout(() => conf.remove(), 4000);
+            }
+        }
+
+        // Drag and Drop Logic using Pointer Events
+        const draggables = document.querySelectorAll('.draggable');
+        const dropzones = document.querySelectorAll('.dropzone');
+        const labelsPool = document.getElementById('labels-pool');
+        
+        let correctCount = 0;
+        let draggedEl = null;
+        let startX = 0, startY = 0;
+        let initialX = 0, initialY = 0;
+
+        draggables.forEach(el => {
+            // Save original HTML string for reset
+            el.dataset.originalHTML = el.outerHTML;
+
+            el.addEventListener('pointerdown', function(e) {
+                // Prevent multi-touch bugs or dragging already placed items
+                if (draggedEl || el.dataset.dropped === 'true') return;
+                
+                initAudio(); // Initialize audio on first user touch
+
+                draggedEl = el;
+                draggedEl.setPointerCapture(e.pointerId);
+                
+                // Get starting pointer coordinates
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                // Read existing transform or set to 0
+                const transform = window.getComputedStyle(draggedEl).getPropertyValue('transform');
+                if (transform !== 'none') {
+                    const matrix = new DOMMatrix(transform);
+                    initialX = matrix.m41;
+                    initialY = matrix.m42;
+                } else {
+                    initialX = 0;
+                    initialY = 0;
+                }
+
+                draggedEl.classList.add('dragging');
+                draggedEl.style.cursor = 'grabbing';
+            });
+        });
+
+        document.addEventListener('pointermove', function(e) {
+            if (!draggedEl) return;
+            
+            // Calculate movement
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            // Apply translation over the initial translation
+            const currentX = initialX + dx;
+            const currentY = initialY + dy;
+            
+            draggedEl.style.transform = `translate(${currentX}px, ${currentY}px)`;
+        });
+
+        document.addEventListener('pointerup', function(e) {
+            if (!draggedEl) return;
+
+            draggedEl.classList.remove('dragging');
+            draggedEl.style.cursor = 'grab';
+            draggedEl.releasePointerCapture(e.pointerId);
+
+            // Bounding box collision detection
+            const draggedRect = draggedEl.getBoundingClientRect();
+            const draggedCenterX = draggedRect.left + (draggedRect.width / 2);
+            const draggedCenterY = draggedRect.top + (draggedRect.height / 2);
+
+            let matchedZone = null;
+
+            // Check if center of dragged element is inside any dropzone
+            dropzones.forEach(zone => {
+                const zoneRect = zone.getBoundingClientRect();
+                if (
+                    draggedCenterX >= zoneRect.left &&
+                    draggedCenterX <= zoneRect.right &&
+                    draggedCenterY >= zoneRect.top &&
+                    draggedCenterY <= zoneRect.bottom
+                ) {
+                    matchedZone = zone;
+                }
+            });
+
+            if (matchedZone && matchedZone.dataset.target === draggedEl.dataset.id) {
+                // CORRECT MATCH!
+                playSound('success');
+                
+                // Mark as dropped to prevent re-dragging
+                draggedEl.dataset.dropped = 'true';
+                
+                // Snap visually by appending to the zone and removing transform
+                draggedEl.style.transform = 'none';
+                matchedZone.appendChild(draggedEl);
+                
+                // Restyle the label to fit the dropzone perfectly
+                draggedEl.classList.remove('w-[120px]', 'md:w-[160px]', 'h-[50px]', 'md:h-[60px]', 'shadow-[0_6px_0_#c2410c]', 'shadow-[0_6px_0_#7e22ce]', 'shadow-[0_6px_0_#1d4ed8]', 'shadow-[0_6px_0_#be185d]');
+                draggedEl.classList.add('w-full', 'h-full', 'shadow-sm', 'm-0', 'text-sm', 'md:text-lg');
+                draggedEl.style.cursor = 'default';
+                
+                // Style the dropzone
+                matchedZone.classList.remove('border-dashed', 'border-slate-300');
+                matchedZone.classList.add('border-solid', 'border-green-400', 'bg-green-50');
+                
+                // Hide hint text
+                matchedZone.querySelector('.dropzone-hint').style.display = 'none';
+
+                correctCount++;
+                
+                // Check Win Condition
+                if (correctCount === 4) {
+                    setTimeout(() => {
+                        playSound('win');
+                        createConfetti();
+                        document.getElementById('success-message').classList.remove('hidden');
+                        document.getElementById('success-message').classList.add('flex');
+                    }, 300);
+                }
+
+            } else {
+                // INCORRECT OR NO ZONE
+                if (matchedZone) {
+                    playSound('error');
+                    // Wobble effect
+                    draggedEl.classList.add('wobble-error');
+                    setTimeout(() => draggedEl.classList.remove('wobble-error'), 500);
+                }
+                
+                // Snap back to initial position smoothly
+                draggedEl.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                draggedEl.style.transform = `translate(0px, 0px)`;
+                
+                // Remove transition after it completes to allow instant dragging again
+                setTimeout(() => {
+                    if (draggedEl) draggedEl.style.transition = 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                }, 400);
+            }
+
+            draggedEl = null;
+        });
+
+        // Reset Game Function
+        function resetGame() {
+            correctCount = 0;
+            document.getElementById('success-message').classList.add('hidden');
+            document.getElementById('success-message').classList.remove('flex');
+            
+            // Reload page is simplest for robust state reset on a single file game
+            // But we will do DOM reset for seamless experience
+            
+            dropzones.forEach(zone => {
+                // Reset dropzone styles
+                zone.classList.add('border-dashed', 'border-slate-300');
+                zone.classList.remove('border-solid', 'border-green-400', 'bg-green-50');
+                zone.querySelector('.dropzone-hint').style.display = 'block';
+            });
+
+            // Re-render labels pool natively to reset all event listeners and styles
+            labelsPool.innerHTML = `
+                <div class="draggable flex items-center justify-center bg-orange-400 text-white font-black text-lg md:text-2xl px-4 py-2 rounded-xl shadow-[0_6px_0_#c2410c] border-2 border-orange-200 cursor-grab active:cursor-grabbing w-[120px] md:w-[160px] h-[50px] md:h-[60px]" data-id="hidung">Hidung</div>
+                <div class="draggable flex items-center justify-center bg-purple-400 text-white font-black text-lg md:text-2xl px-4 py-2 rounded-xl shadow-[0_6px_0_#7e22ce] border-2 border-purple-200 cursor-grab active:cursor-grabbing w-[120px] md:w-[160px] h-[50px] md:h-[60px]" data-id="diafragma">Diafragma</div>
+                <div class="draggable flex items-center justify-center bg-blue-400 text-white font-black text-lg md:text-2xl px-4 py-2 rounded-xl shadow-[0_6px_0_#1d4ed8] border-2 border-blue-200 cursor-grab active:cursor-grabbing w-[120px] md:w-[160px] h-[50px] md:h-[60px]" data-id="trakea">Trakea</div>
+                <div class="draggable flex items-center justify-center bg-pink-400 text-white font-black text-lg md:text-2xl px-4 py-2 rounded-xl shadow-[0_6px_0_#be185d] border-2 border-pink-200 cursor-grab active:cursor-grabbing w-[120px] md:w-[160px] h-[50px] md:h-[60px]" data-id="paru">Paru-paru</div>
+            `;
+            
+            // Re-attach pointerdown events
+            const newDraggables = document.querySelectorAll('.draggable');
+            newDraggables.forEach(el => {
+                el.addEventListener('pointerdown', function(e) {
+                    if (draggedEl || el.dataset.dropped === 'true') return;
+                    initAudio();
+                    draggedEl = el;
+                    draggedEl.setPointerCapture(e.pointerId);
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    const transform = window.getComputedStyle(draggedEl).getPropertyValue('transform');
+                    if (transform !== 'none') {
+                        const matrix = new DOMMatrix(transform);
+                        initialX = matrix.m41;
+                        initialY = matrix.m42;
+                    } else {
+                        initialX = 0;
+                        initialY = 0;
+                    }
+                    draggedEl.classList.add('dragging');
+                    draggedEl.style.cursor = 'grabbing';
+                });
+            });
+        }
+    </script>
+</body>
+</html>
