@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desa Pancasila: Misi Warga Teladan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Latar Belakang Desa (Hub) */
+        .hub-bg {
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.4) 20px, transparent 21px),
+                radial-gradient(circle at 80% 60%, rgba(255,255,255,0.3) 30px, transparent 31px);
+            background-size: cover;
+        }
+
+        /* Latar Belakang VN */
+        .vn-bg {
+            background-color: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+        }
+
+        /* Meteran Kerukunan */
+        .health-bar-container {
+            width: 100%;
+            height: 20px;
+            background-color: #E2E8F0;
+            border-radius: 9999px;
+            border: 2px solid #CBD5E1;
+            overflow: hidden;
+        }
+        .health-bar-fill {
+            height: 100%;
+            transition: width 0.5s ease-in-out, background-color 0.5s ease;
+        }
+
+        /* Animasi */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .avatar-anim {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-in {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Mission Cards */
+        .mission-card {
+            transition: all 0.3s ease;
+        }
+        .mission-card:hover:not(.locked) {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            cursor: pointer;
+        }
+        .mission-card.locked {
+            filter: grayscale(100%);
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .mission-card.completed {
+            border-color: #4ade80;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Header Global -->
+    <header class="bg-white/90 backdrop-blur-md shadow-sm p-3 sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+                <div class="text-2xl md:text-3xl">🦅</div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-black text-blue-600 leading-none">Desa Pancasila</h1>
+                    <p class="text-[10px] md:text-xs font-bold text-gray-500">Kelas 6 SD - Pengamalan Nilai Pancasila</p>
+                </div>
+            </div>
+            
+            <div class="w-1/3 min-w-[120px] max-w-[200px] flex flex-col gap-1">
+                <div class="flex justify-between items-center text-xs font-bold">
+                    <span class="text-gray-600">⭐ Skor Harmoni</span>
+                    <span id="score-text" class="text-blue-600">0</span>
+                </div>
+                <div class="health-bar-container">
+                    <div id="health-bar" class="health-bar-fill bg-yellow-400" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- LAYAR 1: MISSION HUB (PETA DESA) -->
+    <main id="hub-screen" class="hub-bg flex-grow flex flex-col items-center p-4 md:p-8">
+        <div class="max-w-4xl w-full text-center mb-8">
+            <h2 class="text-3xl md:text-4xl font-black text-white drop-shadow-md mb-2">Peta Desa Harapan</h2>
+            <p class="text-base md:text-lg text-blue-800 font-bold bg-white/70 inline-block px-4 py-1 rounded-full shadow-sm">Pilih lokasi dan bantu warga menyelesaikan masalah mereka!</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full">
+            <!-- Misi 1: Taman Kota -->
+            <div id="card-misi1" class="mission-card bg-white rounded-3xl p-6 border-4 border-blue-400 shadow-lg text-center relative" onclick="tryStartMission('misi1')">
+                <div class="text-6xl mb-4">🌳</div>
+                <h3 class="text-xl font-black text-gray-800 mb-2">Taman Kota</h3>
+                <p class="text-sm text-gray-600 font-bold mb-4">Kerja bakti hari Minggu yang menguji rasa pedulimu.</p>
+                <div class="flex flex-wrap gap-1 justify-center mb-4">
+                    <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-bold">Sila 1</span>
+                    <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded-full font-bold">Sila 2</span>
+                </div>
+                <div id="status-misi1" class="bg-blue-500 text-white font-black py-2 rounded-xl">Mulai Misi</div>
+            </div>
+
+            <!-- Misi 2: Balai Desa -->
+            <div id="card-misi2" class="mission-card locked bg-white rounded-3xl p-6 border-4 border-gray-300 shadow-lg text-center relative" onclick="tryStartMission('misi2')">
+                <div class="absolute -top-3 -right-3 text-3xl" id="lock-misi2">🔒</div>
+                <div class="text-6xl mb-4">🏛️</div>
+                <h3 class="text-xl font-black text-gray-800 mb-2">Balai Desa</h3>
+                <p class="text-sm text-gray-600 font-bold mb-4">Perselisihan pemakaian gedung balai desa.</p>
+                <div class="flex flex-wrap gap-1 justify-center mb-4">
+                    <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold">Sila 3</span>
+                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-bold">Sila 4</span>
+                </div>
+                <div id="status-misi2" class="bg-gray-400 text-white font-black py-2 rounded-xl">Terkunci</div>
+            </div>
+
+            <!-- Misi 3: Pos Kamling -->
+            <div id="card-misi3" class="mission-card locked bg-white rounded-3xl p-6 border-4 border-gray-300 shadow-lg text-center relative" onclick="tryStartMission('misi3')">
+                <div class="absolute -top-3 -right-3 text-3xl" id="lock-misi3">🔒</div>
+                <div class="text-6xl mb-4">🛖</div>
+                <h3 class="text-xl font-black text-gray-800 mb-2">Pos Kamling</h3>
+                <p class="text-sm text-gray-600 font-bold mb-4">Bantu Pak Kades membagikan bantuan sembako.</p>
+                <div class="flex flex-wrap gap-1 justify-center mb-4">
+                    <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full font-bold">Sila 5</span>
+                </div>
+                <div id="status-misi3" class="bg-gray-400 text-white font-black py-2 rounded-xl">Terkunci</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- LAYAR 2: VISUAL NOVEL MODE -->
+    <main id="vn-screen" class="hidden flex-grow flex-col justify-end p-4 md:p-8 relative vn-bg">
+        
+        <div class="max-w-3xl w-full mx-auto relative flex flex-col h-full justify-end pb-4 mt-10">
+            <!-- Avatar -->
+            <div class="flex justify-center mb-2 h-40">
+                <div id="character-avatar" class="text-[120px] md:text-[140px] avatar-anim drop-shadow-xl leading-none">
+                    🧔🏽
+                </div>
+            </div>
+
+            <!-- Dialog Box -->
+            <div class="bg-white border-4 border-blue-400 rounded-3xl p-5 md:p-6 shadow-2xl relative pop-in" id="dialog-box">
+                <div id="speaker-name" class="absolute -top-5 left-6 bg-blue-500 text-white font-black text-sm md:text-lg px-5 py-1 rounded-full shadow-md border-2 border-white">
+                    Pak RT
+                </div>
+                <p id="dialog-text" class="text-base md:text-lg font-bold text-gray-700 leading-relaxed mt-3 min-h-[70px]">
+                    Memuat cerita...
+                </p>
+
+                <!-- Pilihan -->
+                <div id="choices-container" class="mt-5 flex flex-col gap-3"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- LAYAR 3: END SCREEN -->
+    <main id="end-screen" class="hidden flex-grow flex-col items-center justify-center p-4 text-center vn-bg">
+        <div class="bg-white p-8 md:p-12 rounded-3xl shadow-2xl border-4 border-yellow-400 max-w-lg w-full pop-in">
+            <div class="text-7xl mb-4" id="end-icon">🏆</div>
+            <h1 class="text-3xl md:text-4xl font-black text-blue-600 mb-2">Petualangan Selesai!</h1>
+            <p class="text-lg font-bold text-gray-600 mb-6">Skor Kerukunan Akhir: <span id="final-score" class="text-2xl text-yellow-500 font-black">0</span> / 100</p>
+            
+            <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-8">
+                <p class="text-gray-700 font-bold leading-relaxed" id="end-message">
+                    Pesan evaluasi akan muncul di sini.
+                </p>
+            </div>
+
+            <button onclick="resetGame()" class="w-full bg-green-500 hover:bg-green-600 text-white font-black text-xl py-4 rounded-full shadow-lg transition-transform hover:scale-105">
+                Main Ulang 🔄
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer Spesifik -->
+    <footer class="bg-white/90 text-center py-3 text-xs md:text-sm font-bold text-gray-500 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] w-full z-50">
+        &copy; 2026 Rajab Sapta Hadi | SD Alumna
+    </footer>
+
+    <!-- SCRIPT LOGIKA GAME -->
+    <script>
+        // --- STATE MANAGEMENT ---
+        let skorHarmoni = 0;
+        let currentMission = null;
+
+        // Status Misi (0: Locked, 1: Unlocked, 2: Completed)
+        const missionStatus = {
+            misi1: 1, 
+            misi2: 0,
+            misi3: 0
+        };
+
+        // --- DATABASE CERITA (DIALOGUE NODES) ---
+        // Sistem ini menggunakan 'node' cerita. Jika pilihan dijawab benar/salah,
+        // alurnya diarahkan ke node 'penjelasan' sebelum lanjut ke cerita berikutnya.
+        const storyData = {
+            
+            // ================= MISI 1: TAMAN KOTA (SILA 1 & 2) =================
+            'misi1_start': {
+                speaker: 'Pak RT', avatar: '🧔🏽',
+                text: 'Selamat pagi warga Desa Harapan! Hari Minggu ini kita kumpul di Taman Kota untuk kerja bakti membersihkan lingkungan.',
+                choices: [{ text: 'Siap Pak RT, ayo kita mulai! 🫡', next: 'misi1_q1' }]
+            },
+            'misi1_q1': {
+                speaker: 'Edo', avatar: '👦🏿',
+                text: 'Maaf teman-teman, hari ini hari Minggu. Aku harus pergi ke Gereja dulu untuk ibadah pagi. Boleh aku menyusul kerjanya nanti siang?',
+                choices: [
+                    {
+                        text: 'A. "Tentu Edo, ibadah itu kewajiban. Nanti kamu bantu angkut sampah yang ringan saja ya."',
+                        score: 20, next: 'misi1_q1_correct'
+                    },
+                    {
+                        text: 'B. "Yah jangan dong Do, bolos ibadah sekali saja kan tidak apa-apa biar kerjaan kita cepat selesai."',
+                        score: 0, next: 'misi1_q1_wrong'
+                    }
+                ]
+            },
+            'misi1_q1_correct': {
+                speaker: 'Buku Panduan Desa (Sila 1)', avatar: '⭐',
+                text: 'Tepat sekali! Membiarkan Edo beribadah ke Gereja adalah wujud nyata Sila Ke-1: "Ketuhanan Yang Maha Esa". Kita harus saling menghormati dan memberi kebebasan beragama di lingkungan desa.',
+                choices: [{ text: 'Lanjut kerja bakti...', next: 'misi1_q2' }]
+            },
+            'misi1_q1_wrong': {
+                speaker: 'Buku Panduan Desa (Sila 1)', avatar: '❌',
+                text: 'Keputusanmu kurang tepat! Mengajak teman membolos ibadah melanggar Sila Ke-1: "Ketuhanan Yang Maha Esa". Beribadah adalah hak setiap warga yang harus kita hormati.',
+                choices: [{ text: 'Maafkan aku, lanjut kerja bakti...', next: 'misi1_q2' }]
+            },
+            'misi1_q2': {
+                speaker: 'Budi', avatar: '👦🏻',
+                text: '(Terdengar suara jatuh) Aduh! Tanganku terkena pecahan botol kaca saat membersihkan rumput, darahnya banyak!',
+                choices: [
+                    {
+                        text: 'A. Membiarkannya menangis, karena itu salahnya sendiri kurang hati-hati saat bekerja.',
+                        score: 0, next: 'misi1_q2_wrong'
+                    },
+                    {
+                        text: 'B. Berhenti bekerja sementara, mencari kotak P3K dan membalut luka Budi agar tidak infeksi.',
+                        score: 20, next: 'misi1_q2_correct'
+                    }
+                ]
+            },
+            'misi1_q2_correct': {
+                speaker: 'Buku Panduan Desa (Sila 2)', avatar: '💖',
+                text: 'Luar biasa! Menolong luka Budi mencerminkan Sila Ke-2: "Kemanusiaan yang Adil dan Beradab". Warga desa yang baik selalu peduli dan gemar menolong sesama yang kesusahan.',
+                choices: [{ text: 'Selesaikan Misi 1', action: () => completeMission('misi1') }]
+            },
+            'misi1_q2_wrong': {
+                speaker: 'Buku Panduan Desa (Sila 2)', avatar: '❌',
+                text: 'Sangat tidak empati! Membiarkan teman yang terluka bertentangan dengan Sila Ke-2: "Kemanusiaan yang Adil dan Beradab". Kita harus memiliki rasa tolong-menolong.',
+                choices: [{ text: 'Selesaikan Misi 1', action: () => completeMission('misi1') }]
+            },
+
+            // ================= MISI 2: BALAI DESA (SILA 3 & 4) =================
+            'misi2_start': {
+                speaker: 'Siti & Udin', avatar: '😠',
+                text: 'Siti: "Kami kelompok seni tari duluan yang sampai di Balai Desa!"\nUdin: "Gak bisa! Kelompok Pencak Silat lagi butuh tempat luas. Kalian nari di luar saja!"',
+                choices: [{ text: 'Tenang teman-teman, ada apa ini?', next: 'misi2_q1' }]
+            },
+            'misi2_q1': {
+                speaker: 'Kamu (Pemain)', avatar: '🧒',
+                text: 'Mereka bertengkar berebut Balai Desa. Apa yang harus aku katakan?',
+                choices: [
+                    {
+                        text: 'A. Mengingatkan mereka bahwa Balai Desa milik bersama, dan kita tidak boleh bertengkar memecah belah warga.',
+                        score: 20, next: 'misi2_q1_correct'
+                    },
+                    {
+                        text: 'B. Membela kelompok Pencak Silat karena bela diri lebih penting untuk menjaga keamanan desa.',
+                        score: 0, next: 'misi2_q1_wrong'
+                    }
+                ]
+            },
+            'misi2_q1_correct': {
+                speaker: 'Buku Panduan Desa (Sila 3)', avatar: '🤝',
+                text: 'Pilihan bijak! Mengajak mereka berdamai adalah pengamalan Sila Ke-3: "Persatuan Indonesia". Kita tidak boleh membeda-bedakan atau memihak, kerukunan warga lebih utama!',
+                choices: [{ text: 'Lalu bagaimana solusinya?', next: 'misi2_q2' }]
+            },
+            'misi2_q1_wrong': {
+                speaker: 'Buku Panduan Desa (Sila 3)', avatar: '❌',
+                text: 'Itu menyebabkan perpecahan! Memihak satu kelompok secara egois bertentangan dengan Sila Ke-3: "Persatuan Indonesia". Semua warga punya hak yang sama.',
+                choices: [{ text: 'Lalu bagaimana solusinya?', next: 'misi2_q2' }]
+            },
+            'misi2_q2': {
+                speaker: 'Udin', avatar: '👦🏽',
+                text: 'Lalu bagaimana cara kita menentukan siapa yang pakai gedungnya hari ini? Kami berdua sama-sama butuh.',
+                choices: [
+                    {
+                        text: 'A. Memaksa mereka melakukan suit. Yang kalah tidak boleh protes dan harus mengalah.',
+                        score: 0, next: 'misi2_q2_wrong'
+                    },
+                    {
+                        text: 'B. Mengumpulkan ketua kelompok Tari dan Silat, lalu duduk bersama untuk membagi jadwal hari ini secara adil (Musyawarah).',
+                        score: 20, next: 'misi2_q2_correct'
+                    }
+                ]
+            },
+            'misi2_q2_correct': {
+                speaker: 'Buku Panduan Desa (Sila 4)', avatar: '🗣️',
+                text: 'Sangat demokratis! Menyelesaikan masalah dengan berdiskusi mencerminkan Sila Ke-4. Keputusan yang diambil lewat "musyawarah mufakat" akan menghindari konflik.',
+                choices: [{ text: 'Selesaikan Misi 2', action: () => completeMission('misi2') }]
+            },
+            'misi2_q2_wrong': {
+                speaker: 'Buku Panduan Desa (Sila 4)', avatar: '❌',
+                text: 'Itu bukan cara yang baik! Memaksakan kehendak tanpa diskusi melanggar Sila Ke-4 tentang "Musyawarah". Kita harus selalu mencari jalan tengah bersama-sama.',
+                choices: [{ text: 'Selesaikan Misi 2', action: () => completeMission('misi2') }]
+            },
+
+            // ================= MISI 3: POS KAMLING (SILA 5) =================
+            'misi3_start': {
+                speaker: 'Pak Kades', avatar: '👴🏼',
+                text: 'Nak, di Pos Kamling ini ada kelebihan 5 paket sembako dari kas desa. Bapak bingung sisa paket ini sebaiknya dibagikan ke mana?',
+                choices: [{ text: 'Wah, lumayan itu Pak. Menurut saya...', next: 'misi3_q1' }]
+            },
+            'misi3_q1': {
+                speaker: 'Kamu (Pemain)', avatar: '🧒',
+                text: 'Apa saran terbaik yang mencerminkan Keadilan Sosial?',
+                choices: [
+                    {
+                        text: 'A. "Berikan saja kepada anak-anak Pak Kades dan teman-teman dekat saya Pak, kan kita yang sering bantu-bantu."',
+                        score: 0, next: 'misi3_q1_wrong'
+                    },
+                    {
+                        text: 'B. "Kita harus mendata warga desa yang kurang mampu atau lansia, lalu membagikannya adil kepada mereka."',
+                        score: 20, next: 'misi3_q1_correct'
+                    }
+                ]
+            },
+            'misi3_q1_correct': {
+                speaker: 'Buku Panduan Desa (Sila 5)', avatar: '⚖️',
+                text: 'Keputusan yang sangat adil! Membagikan sembako kepada yang paling membutuhkan adalah wujud Sila Ke-5: "Keadilan Sosial Bagi Seluruh Rakyat Indonesia".',
+                choices: [{ text: 'Selesaikan Petualangan!', action: () => showFinalResult() }]
+            },
+            'misi3_q1_wrong': {
+                speaker: 'Buku Panduan Desa (Sila 5)', avatar: '❌',
+                text: 'Itu namanya tindakan nepotisme (KKN)! Mementingkan keluarga atau teman sendiri bertentangan dengan Sila Ke-5: "Keadilan Sosial". Hak rakyat miskin tidak boleh dirampas.',
+                choices: [{ text: 'Selesaikan Petualangan!', action: () => showFinalResult() }]
+            }
+        };
+
+        // --- DOM ELEMENTS ---
+        const screens = {
+            hub: document.getElementById('hub-screen'),
+            vn: document.getElementById('vn-screen'),
+            end: document.getElementById('end-screen')
+        };
+        const ui = {
+            scoreText: document.getElementById('score-text'),
+            healthBar: document.getElementById('health-bar'),
+            speakerName: document.getElementById('speaker-name'),
+            dialogText: document.getElementById('dialog-text'),
+            choicesContainer: document.getElementById('choices-container'),
+            avatar: document.getElementById('character-avatar'),
+            dialogBox: document.getElementById('dialog-box')
+        };
+
+        // --- CORE FUNCTIONS ---
+
+        function updateScore(points) {
+            skorHarmoni = Math.min(100, skorHarmoni + points);
+            ui.scoreText.textContent = skorHarmoni;
+            ui.healthBar.style.width = `${skorHarmoni}%`;
+            
+            if (skorHarmoni >= 80) ui.healthBar.className = "health-bar-fill bg-green-500";
+            else if (skorHarmoni >= 40) ui.healthBar.className = "health-bar-fill bg-yellow-400";
+            else ui.healthBar.className = "health-bar-fill bg-red-500";
+        }
+
+        function renderHub() {
+            // Sembunyikan layar lain
+            screens.vn.classList.add('hidden');
+            screens.vn.classList.remove('flex');
+            screens.end.classList.add('hidden');
+            screens.end.classList.remove('flex');
+            screens.hub.classList.remove('hidden');
+
+            // Update Tampilan Kartu Misi
+            for (let i = 1; i <= 3; i++) {
+                const misId = `misi${i}`;
+                const card = document.getElementById(`card-${misId}`);
+                const statusBtn = document.getElementById(`status-${misId}`);
+                const lock = document.getElementById(`lock-${misId}`);
+
+                if (missionStatus[misId] === 0) {
+                    card.className = "mission-card locked bg-white rounded-3xl p-6 border-4 border-gray-300 shadow-lg text-center relative";
+                    statusBtn.className = "bg-gray-400 text-white font-black py-2 rounded-xl";
+                    statusBtn.textContent = "Terkunci";
+                    if(lock) lock.style.display = 'block';
+                } else if (missionStatus[misId] === 1) {
+                    card.className = "mission-card bg-white rounded-3xl p-6 border-4 border-blue-400 shadow-lg text-center relative";
+                    statusBtn.className = "bg-blue-500 text-white font-black py-2 rounded-xl";
+                    statusBtn.textContent = "Mulai Misi";
+                    if(lock) lock.style.display = 'none';
+                } else if (missionStatus[misId] === 2) {
+                    card.className = "mission-card completed bg-white rounded-3xl p-6 border-4 border-green-400 shadow-lg text-center relative";
+                    statusBtn.className = "bg-green-500 text-white font-black py-2 rounded-xl";
+                    statusBtn.textContent = "Selesai ✓";
+                    if(lock) lock.style.display = 'none';
+                }
+            }
+        }
+
+        function tryStartMission(missionId) {
+            if (missionStatus[missionId] === 0) return; // Silent return if locked
+            if (missionStatus[missionId] === 2) return; // Prevent replay to keep linear flow for this demo
+
+            currentMission = missionId;
+            screens.hub.classList.add('hidden');
+            screens.vn.classList.remove('hidden');
+            screens.vn.classList.add('flex');
+            
+            loadScene(`${missionId}_start`);
+        }
+
+        function completeMission(missionId) {
+            missionStatus[missionId] = 2; // Tandai selesai
+            
+            // Buka misi selanjutnya
+            if(missionId === 'misi1') missionStatus['misi2'] = 1;
+            if(missionId === 'misi2') missionStatus['misi3'] = 1;
+            
+            renderHub();
+        }
+
+        function loadScene(sceneId) {
+            const scene = storyData[sceneId];
+            if (!scene) return;
+
+            // Animasi kotak dialog
+            ui.dialogBox.classList.remove('pop-in');
+            void ui.dialogBox.offsetWidth; // Trigger reflow
+            ui.dialogBox.classList.add('pop-in');
+
+            ui.speakerName.textContent = scene.speaker;
+            ui.avatar.textContent = scene.avatar;
+            
+            // Efek mengetik
+            ui.dialogText.textContent = '';
+            let charIdx = 0;
+            const tw = setInterval(() => {
+                ui.dialogText.textContent += scene.text.charAt(charIdx);
+                charIdx++;
+                if (charIdx >= scene.text.length) clearInterval(tw);
+            }, 10);
+
+            // Buat tombol pilihan
+            ui.choicesContainer.innerHTML = '';
+            scene.choices.forEach((choice) => {
+                const btn = document.createElement('button');
+                btn.className = "bg-gray-50 border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-gray-700 font-bold py-3 px-5 rounded-xl text-left w-full transition-all text-sm md:text-base";
+                btn.textContent = choice.text;
+                
+                btn.onclick = () => {
+                    // Update skor jika ada
+                    if (choice.score !== undefined && missionStatus[currentMission] !== 2) {
+                        updateScore(choice.score);
+                    }
+                    
+                    // Lanjut ke scene berikutnya atau selesaikan misi
+                    if (choice.action) {
+                        choice.action(); 
+                    } else if (choice.next) {
+                        loadScene(choice.next);
+                    }
+                };
+                ui.choicesContainer.appendChild(btn);
+            });
+        }
+
+        function showFinalResult() {
+            screens.vn.classList.add('hidden');
+            screens.vn.classList.remove('flex');
+            
+            screens.end.classList.remove('hidden');
+            screens.end.classList.add('flex');
+
+            document.getElementById('final-score').textContent = skorHarmoni;
+            const msgEl = document.getElementById('end-message');
+            const iconEl = document.getElementById('end-icon');
+
+            if (skorHarmoni === 100) {
+                iconEl.textContent = '🌟';
+                msgEl.textContent = "Sempurna! Kamu memahami seluruh pengamalan Sila ke-1 sampai ke-5 dengan sangat baik. Kamu adalah teladan kebanggaan SD Alumna!";
+                msgEl.className = "text-green-700 font-bold leading-relaxed";
+            } else if (skorHarmoni >= 60) {
+                iconEl.textContent = '👍';
+                msgEl.textContent = "Kerja bagus! Sebagian besar keputusanmu sudah sesuai dengan Pancasila. Tingkatkan terus belajarmu ya!";
+                msgEl.className = "text-blue-700 font-bold leading-relaxed";
+            } else {
+                iconEl.textContent = '📚';
+                msgEl.textContent = "Jangan menyerah! Sepertinya kamu masih keliru memahami beberapa nilai Sila Pancasila. Mari kita belajar lagi dan coba kembali!";
+                msgEl.className = "text-red-700 font-bold leading-relaxed";
+            }
+        }
+
+        function resetGame() {
+            skorHarmoni = 0;
+            updateScore(0);
+            missionStatus.misi1 = 1;
+            missionStatus.misi2 = 0;
+            missionStatus.misi3 = 0;
+            renderHub();
+        }
+
+        // Inisialisasi awal
+        window.onload = () => {
+            renderHub();
+            updateScore(0);
+        };
+    </script>
+</body>
+</html>
