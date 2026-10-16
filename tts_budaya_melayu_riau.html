@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Budaya Melayu Riau</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            /* Palet Hijau Melayu */
+            background-color: #064e3b; /* green-900 */
+            background-image: radial-gradient(#0f766e 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .tts-grid {
+            display: grid;
+            grid-template-columns: repeat(25, 1fr);
+            gap: 1px;
+            background-color: #fbbf24; /* border kuning emas */
+            padding: 2px;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            width: max-content;
+        }
+
+        .tts-cell {
+            width: 32px;
+            height: 32px;
+            background-color: transparent;
+            position: relative;
+        }
+
+        .tts-input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #ffffff;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #1e293b;
+            caret-color: transparent;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .tts-input:focus {
+            outline: none;
+            background-color: #fef08a !important; /* kuning terang saat aktif */
+        }
+
+        .tts-input.highlight {
+            background-color: #fef9c3; /* kuning sangat terang untuk kata yang disorot */
+        }
+
+        .tts-input.correct {
+            background-color: #bbf7d0 !important;
+            color: #166534;
+        }
+
+        .tts-input.incorrect {
+            background-color: #fecaca !important;
+            color: #991b1b;
+        }
+
+        .cell-number {
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            font-size: 9px;
+            font-weight: 600;
+            color: #475569;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Custom Scrollbar untuk grid */
+        .grid-container::-webkit-scrollbar { height: 10px; width: 10px; }
+        .grid-container::-webkit-scrollbar-track { background: #064e3b; }
+        .grid-container::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 5px; }
+
+        .clue-list-container::-webkit-scrollbar { width: 6px; }
+        .clue-list-container::-webkit-scrollbar-track { background: #f1f5f9; rounded-lg}
+        .clue-list-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        .clue-item {
+            transition: all 0.2s;
+        }
+        .clue-item.active {
+            background-color: #fef08a;
+            border-left: 4px solid #ca8a04;
+            font-weight: 600;
+        }
+
+        @media (max-width: 640px) {
+            .tts-cell { width: 28px; height: 28px; }
+            .tts-input { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col items-center py-8 px-4">
+
+    <!-- Header -->
+    <header class="text-center mb-8 w-full max-w-6xl">
+        <div class="inline-block border-b-4 border-yellow-400 pb-2 mb-2">
+            <h1 class="text-3xl md:text-5xl font-bold text-yellow-400 uppercase tracking-widest drop-shadow-md">Teka-Teki Silang</h1>
+        </div>
+        <h2 class="text-xl md:text-2xl font-semibold text-green-100 mt-2">Tema: Budaya Melayu Riau</h2>
+    </header>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-7xl flex flex-col lg:flex-row gap-8 items-start justify-center">
+        
+        <!-- Area Grid TTS -->
+        <div class="w-full lg:w-2/3 bg-green-800 p-4 rounded-xl shadow-2xl border-2 border-yellow-500 overflow-hidden flex flex-col items-center">
+            <div class="w-full overflow-auto grid-container pb-4">
+                <div class="tts-grid mx-auto" id="tts-grid">
+                    <!-- Grid akan di-generate oleh JS -->
+                </div>
+            </div>
+            
+            <div class="mt-6 w-full flex flex-col sm:flex-row gap-4 justify-between items-center bg-green-900 p-4 rounded-lg border border-green-700">
+                <div class="text-yellow-400 font-semibold text-lg" id="score-display">Skor: 0 / 20 Kata Benar</div>
+                <div class="flex gap-3 w-full sm:w-auto">
+                    <button onclick="checkAnswers()" class="flex-1 sm:flex-none bg-yellow-500 hover:bg-yellow-400 text-green-900 font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform active:scale-95">
+                        Cek Jawaban
+                    </button>
+                    <button onclick="resetGrid()" class="flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform transform active:scale-95">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Area Daftar Soal -->
+        <div class="w-full lg:w-1/3 flex flex-col gap-6">
+            
+            <!-- Mendatar -->
+            <div class="bg-white text-slate-800 rounded-xl shadow-xl border-t-8 border-yellow-500 flex flex-col max-h-[40vh] lg:max-h-[350px]">
+                <div class="bg-yellow-100 p-3 border-b border-yellow-200">
+                    <h3 class="text-lg font-bold text-yellow-800 uppercase flex items-center gap-2">
+                        <span class="text-xl">➔</span> Mendatar
+                    </h3>
+                </div>
+                <div class="overflow-y-auto clue-list-container p-2 flex-1" id="clues-horizontal">
+                    <!-- Clue mendatar generated by JS -->
+                </div>
+            </div>
+
+            <!-- Menurun -->
+            <div class="bg-white text-slate-800 rounded-xl shadow-xl border-t-8 border-green-600 flex flex-col max-h-[40vh] lg:max-h-[350px]">
+                <div class="bg-green-50 p-3 border-b border-green-200">
+                    <h3 class="text-lg font-bold text-green-800 uppercase flex items-center gap-2">
+                        <span class="text-xl">⬇</span> Menurun
+                    </h3>
+                </div>
+                <div class="overflow-y-auto clue-list-container p-2 flex-1" id="clues-vertical">
+                    <!-- Clue menurun generated by JS -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const puzzleData = [
+            { id: 1, word: 'SYARIFKASIM', clue: 'Pahlawan Nasional dari Riau (Sultan...)', x: 7, y: 12, dir: 'H' },
+            { id: 2, word: 'SAKAI', clue: 'Suku asli yang mendiami pedalaman Riau', x: 22, y: 18, dir: 'V' },
+            { id: 3, word: 'ASAMPEDAS', clue: 'Masakan khas Riau berbahan ikan patin', x: 3, y: 9, dir: 'H' },
+            { id: 4, word: 'ZAPIN', clue: 'Tarian tradisional Melayu bernuansa Islami', x: 19, y: 22, dir: 'H' },
+            { id: 5, word: 'KERIS', clue: 'Senjata tradisional Melayu Riau', x: 11, y: 5, dir: 'V' },
+            { id: 6, word: 'LAKSAMANA', clue: 'Minuman khas Riau: Es ... Mengamuk', x: 3, y: 16, dir: 'H' },
+            { id: 7, word: 'TEPAK', clue: 'Wadah sirih upacara adat', x: 10, y: 6, dir: 'H' },
+            { id: 8, word: 'GURINDAM', clue: 'Karya sastra Melayu (... Dua Belas)', x: 0, y: 14, dir: 'H' },
+            { id: 9, word: 'MAKYONG', clue: 'Kesenian teater tradisional Melayu', x: 17, y: 12, dir: 'V' },
+            { id: 10, word: 'MELAYU', clue: 'Bahasa daerah yang menjadi akar bahasa Indonesia', x: 3, y: 7, dir: 'H' },
+            { id: 11, word: 'KOMPANG', clue: 'Alat musik pukul untuk acara pernikahan', x: 3, y: 5, dir: 'V' },
+            { id: 12, word: 'KURUNG', clue: 'Baju ... (pakaian adat perempuan Melayu)', x: 3, y: 5, dir: 'H' },
+            { id: 13, word: 'GAMBUS', clue: 'Alat musik petik tradisional Melayu', x: 17, y: 18, dir: 'H' },
+            { id: 14, word: 'PANTUN', clue: 'Puisi lama lisan masyarakat Melayu', x: 1, y: 10, dir: 'V' },
+            { id: 15, word: 'TENUN', clue: 'Kain tradisional khas Riau', x: 7, y: 1, dir: 'V' },
+            { id: 16, word: 'PACUJALUR', clue: 'Lomba perahu tradisional di Kuantan Singingi', x: 9, y: 11, dir: 'V' },
+            { id: 17, word: 'BOLUKEMOJO', clue: 'Kue khas Riau berbentuk bunga kemboja', x: 13, y: 8, dir: 'V' },
+            { id: 18, word: 'PERSEMBAHAN', clue: 'Tarian untuk menyambut tamu kehormatan', x: 7, y: 9, dir: 'V' },
+            { id: 19, word: 'SYAIR', clue: 'Puisi lama Melayu bersajak a-a-a-a', x: 15, y: 12, dir: 'V' },
+            { id: 20, word: 'SIAK', clue: 'Nama kerajaan Melayu Islam terkenal di Riau', x: 11, y: 11, dir: 'V' }
+        ];
+
+        const COLS = 25;
+        const ROWS = 25;
+        let gridMap = {};
+        let activeWordId = null;
+
+        function init() {
+            buildGridData();
+            renderGrid();
+            renderClues();
+        }
+
+        // Memetakan data soal ke struktur grid
+        function buildGridData() {
+            gridMap = {};
+            puzzleData.forEach(item => {
+                let currX = item.x;
+                let currY = item.y;
+
+                for (let i = 0; i < item.word.length; i++) {
+                    const key = `${currX},${currY}`;
+                    if (!gridMap[key]) {
+                        gridMap[key] = {
+                            x: currX, y: currY,
+                            words: [],
+                            char: item.word[i],
+                            isStart: false,
+                            startNumbers: []
+                        };
+                    }
+                    
+                    gridMap[key].words.push({ id: item.id, dir: item.dir, index: i });
+
+                    if (i === 0) {
+                        gridMap[key].isStart = true;
+                        gridMap[key].startNumbers.push(item.id);
+                    }
+
+                    if (item.dir === 'H') currX++;
+                    else currY++;
+                }
+            });
+        }
+
+        // Render Papan TTS
+        function renderGrid() {
+            const gridEl = document.getElementById('tts-grid');
+            gridEl.innerHTML = '';
+
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    const key = `${x},${y}`;
+                    const cellData = gridMap[key];
+
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'tts-cell';
+
+                    if (cellData) {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.maxLength = 1;
+                        input.className = 'tts-input';
+                        input.dataset.x = x;
+                        input.dataset.y = y;
+                        // Simpan id kata apa saja yang melewati sel ini
+                        input.dataset.words = cellData.words.map(w => w.id).join(',');
+
+                        // Event Listeners untuk Interaksi
+                        input.addEventListener('focus', () => handleCellFocus(x, y, cellData));
+                        input.addEventListener('click', () => handleCellClick(x, y, cellData));
+                        input.addEventListener('keydown', (e) => handleKeyDown(e, x, y, cellData));
+                        input.addEventListener('input', (e) => handleInput(e, x, y, cellData));
+
+                        cellDiv.appendChild(input);
+
+                        // Tambahkan Nomor
+                        if (cellData.isStart) {
+                            const numSpan = document.createElement('span');
+                            numSpan.className = 'cell-number';
+                            // Jika ada dua kata berpotongan mulai di titik yang sama, tampilkan ID pertama saja
+                            numSpan.textContent = cellData.startNumbers[0];
+                            cellDiv.appendChild(numSpan);
+                        }
+                    }
+                    gridEl.appendChild(cellDiv);
+                }
+            }
+        }
+
+        // Render Daftar Soal
+        function renderClues() {
+            const listH = document.getElementById('clues-horizontal');
+            const listV = document.getElementById('clues-vertical');
+            
+            listH.innerHTML = '';
+            listV.innerHTML = '';
+
+            // Sort by ID
+            const sortedData = [...puzzleData].sort((a, b) => a.id - b.id);
+
+            sortedData.forEach(item => {
+                const clueDiv = document.createElement('div');
+                clueDiv.className = 'clue-item p-2 mb-1 rounded cursor-pointer text-sm hover:bg-slate-100 flex gap-2';
+                clueDiv.id = `clue-${item.id}`;
+                clueDiv.innerHTML = `<span class="font-bold w-6 shrink-0">${item.id}.</span> <span>${item.clue}</span>`;
+                
+                clueDiv.addEventListener('click', () => selectWord(item.id));
+
+                if (item.dir === 'H') {
+                    listH.appendChild(clueDiv);
+                } else {
+                    listV.appendChild(clueDiv);
+                }
+            });
+        }
+
+        // --- Logika Interaksi ---
+
+        function handleCellFocus(x, y, cellData) {
+            // Jika kata aktif tidak ada di sel ini, pilih kata pertama di sel tersebut
+            const wordsInCell = cellData.words.map(w => w.id);
+            if (!activeWordId || !wordsInCell.includes(activeWordId)) {
+                selectWord(wordsInCell[0]);
+            }
+        }
+
+        function handleCellClick(x, y, cellData) {
+            const wordsInCell = cellData.words.map(w => w.id);
+            // Toggle arah (Mendatar/Menurun) jika sel adalah persimpangan
+            if (wordsInCell.length > 1 && activeWordId) {
+                const currentIndex = wordsInCell.indexOf(activeWordId);
+                const nextIndex = (currentIndex + 1) % wordsInCell.length;
+                selectWord(wordsInCell[nextIndex]);
+            } else {
+                selectWord(wordsInCell[0]);
+            }
+        }
+
+        function selectWord(wordId) {
+            activeWordId = wordId;
+            
+            // Hapus highlight lama
+            document.querySelectorAll('.tts-input.highlight').forEach(el => el.classList.remove('highlight'));
+            document.querySelectorAll('.clue-item.active').forEach(el => el.classList.remove('active'));
+
+            const wordData = puzzleData.find(w => w.id === wordId);
+            if (!wordData) return;
+
+            // Highlight sel baru
+            let cx = wordData.x;
+            let cy = wordData.y;
+            for (let i = 0; i < wordData.word.length; i++) {
+                const input = document.querySelector(`.tts-input[data-x="${cx}"][data-y="${cy}"]`);
+                if (input) input.classList.add('highlight');
+                if (wordData.dir === 'H') cx++; else cy++;
+            }
+
+            // Highlight Clue
+            const clueEl = document.getElementById(`clue-${wordId}`);
+            if (clueEl) {
+                clueEl.classList.add('active');
+                clueEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function handleInput(e, x, y, cellData) {
+            const val = e.target.value;
+            // Hanya izinkan huruf
+            if (!/^[a-zA-Z]*$/.test(val)) {
+                e.target.value = '';
+                return;
+            }
+            e.target.value = val.toUpperCase();
+            
+            // Bersihkan styling error/correct sebelumnya
+            e.target.classList.remove('correct', 'incorrect');
+
+            if (val !== '') {
+                moveToNextCell(x, y, 1);
+            }
+        }
+
+        function handleKeyDown(e, x, y, cellData) {
+            if (e.key === 'Backspace' && e.target.value === '') {
+                e.preventDefault();
+                moveToNextCell(x, y, -1);
+            } else if (e.key === 'ArrowRight') {
+                moveToNextCell(x, y, 1, 'H');
+            } else if (e.key === 'ArrowLeft') {
+                moveToNextCell(x, y, -1, 'H');
+            } else if (e.key === 'ArrowDown') {
+                moveToNextCell(x, y, 1, 'V');
+            } else if (e.key === 'ArrowUp') {
+                moveToNextCell(x, y, -1, 'V');
+            }
+        }
+
+        function moveToNextCell(x, y, step, forceDir = null) {
+            if (!activeWordId && !forceDir) return;
+            
+            let wordData = puzzleData.find(w => w.id === activeWordId);
+            let dir = forceDir || (wordData ? wordData.dir : 'H');
+
+            let nextX = parseInt(x);
+            let nextY = parseInt(y);
+
+            if (dir === 'H') nextX += step;
+            else nextY += step;
+
+            const nextInput = document.querySelector(`.tts-input[data-x="${nextX}"][data-y="${nextY}"]`);
+            if (nextInput) {
+                // Pastikan sel berikutnya masih bagian dari kata yang sedang aktif (jika tidak sedang navigasi panah manual)
+                if (!forceDir) {
+                   const wordsInNext = nextInput.dataset.words.split(',').map(Number);
+                   if(wordsInNext.includes(activeWordId)) {
+                       nextInput.focus();
+                   }
+                } else {
+                    nextInput.focus();
+                }
+            }
+        }
+
+        // --- Logika Pengecekan Jawaban ---
+
+        function checkAnswers() {
+            let correctWords = 0;
+
+            puzzleData.forEach(item => {
+                let isWordCorrect = true;
+                let cx = item.x;
+                let cy = item.y;
+                let inputsForWord = [];
+
+                // Kumpulkan input untuk kata ini
+                for (let i = 0; i < item.word.length; i++) {
+                    const input = document.querySelector(`.tts-input[data-x="${cx}"][data-y="${cy}"]`);
+                    inputsForWord.push({ el: input, correctChar: item.word[i] });
+                    if (item.dir === 'H') cx++; else cy++;
+                }
+
+                // Periksa setiap huruf
+                inputsForWord.forEach(data => {
+                    if (!data.el) { isWordCorrect = false; return; }
+                    
+                    const userVal = data.el.value.toUpperCase();
+                    if (userVal === '') {
+                        isWordCorrect = false;
+                        data.el.classList.remove('correct', 'incorrect');
+                    } else if (userVal === data.correctChar) {
+                        // Jangan override merah jadi hijau jika bagian dari kata salah lainnya yang berpotongan (handled below)
+                    } else {
+                        isWordCorrect = false;
+                    }
+                });
+
+                // Terapkan warna
+                inputsForWord.forEach(data => {
+                     const userVal = data.el.value.toUpperCase();
+                     if(userVal !== '') {
+                         if (userVal === data.correctChar) {
+                             data.el.classList.add('correct');
+                             data.el.classList.remove('incorrect');
+                         } else {
+                             data.el.classList.add('incorrect');
+                             data.el.classList.remove('correct');
+                         }
+                     }
+                });
+
+                if (isWordCorrect) {
+                    correctWords++;
+                }
+            });
+
+            // Update Skor
+            document.getElementById('score-display').textContent = `Skor: ${correctWords} / ${puzzleData.length} Kata Benar`;
+            
+            if (correctWords === puzzleData.length) {
+                setTimeout(() => alert("Tahniah! Anda berhasil menyelesaikan semua Teka-Teki Silang Budaya Melayu Riau!"), 300);
+            }
+        }
+
+        function resetGrid() {
+            if(confirm("Apakah Anda yakin ingin menghapus semua jawaban?")) {
+                document.querySelectorAll('.tts-input').forEach(input => {
+                    input.value = '';
+                    input.classList.remove('correct', 'incorrect', 'highlight');
+                });
+                document.querySelectorAll('.clue-item.active').forEach(el => el.classList.remove('active'));
+                document.getElementById('score-display').textContent = `Skor: 0 / ${puzzleData.length} Kata Benar`;
+                activeWordId = null;
+            }
+        }
+
+        // Jalankan saat load
+        window.onload = init;
+
+    </script>
+</body>
+</html>
