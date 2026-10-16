@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Matematika: Menyelamatkan Hutan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka One', cursive;
+            /* Latar belakang cerah seperti langit dan rumput hijau */
+            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 50%, #90EE90 50%, #32CD32 100%);
+            margin: 0;
+            overflow: hidden;
+            touch-action: manipulation; /* Mencegah zoom saat double tap di HP */
+        }
+        
+        .wood-panel {
+            background-color: #8B4513;
+            border: 6px solid #5C3A21;
+            border-radius: 20px;
+            box-shadow: 0 8px 0 #4A2F1D, 0 15px 20px rgba(0,0,0,0.3);
+            color: #FFF8DC;
+            text-shadow: 2px 2px 0 #5C3A21;
+        }
+
+        .btn-game {
+            transition: all 0.1s ease-in-out;
+            border-bottom-width: 8px;
+        }
+        
+        .btn-game:active {
+            transform: translateY(8px);
+            border-bottom-width: 0px;
+            margin-bottom: 8px;
+        }
+
+        /* Animasi Salah (Getar dan Merah) */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .shake-effect {
+            animation: shake 0.5s;
+            background-color: #ffcccc !important;
+        }
+
+        /* Animasi Benar (Pop) */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .pop-effect {
+            animation: pop 0.3s ease-out;
+        }
+
+        /* Dekorasi Hutan Sederhana menggunakan Emoji */
+        .forest-decor {
+            position: absolute;
+            font-size: 80px;
+            z-index: -1;
+            bottom: 10%;
+        }
+        .cloud-decor {
+            position: absolute;
+            font-size: 60px;
+            z-index: -1;
+            top: 10%;
+            opacity: 0.8;
+            animation: float 20s linear infinite;
+        }
+        @keyframes float {
+            from { transform: translateX(110vw); }
+            to { transform: translateX(-20vw); }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center relative">
+
+    <!-- Latar Belakang Dekorasi Hutan -->
+    <div class="cloud-decor" style="top: 5%; animation-duration: 25s;">☁️</div>
+    <div class="cloud-decor" style="top: 15%; animation-duration: 18s; animation-delay: -10s;">☁️</div>
+    <div class="cloud-decor" style="top: 8%; animation-duration: 22s; animation-delay: -5s;">☁️</div>
+    
+    <div class="forest-decor" style="left: 5%;">🌲</div>
+    <div class="forest-decor" style="left: 15%; bottom: 8%; font-size: 60px;">🌳</div>
+    <div class="forest-decor" style="right: 5%;">🌲</div>
+    <div class="forest-decor" style="right: 20%; bottom: 5%; font-size: 70px;">🌳</div>
+    <div class="forest-decor" style="left: 45%; bottom: 2%; font-size: 50px;">🍄</div>
+
+    <!-- Layar Utama (Main Menu) -->
+    <div id="start-screen" class="z-10 flex flex-col items-center justify-center w-full h-full max-w-2xl px-4 text-center">
+        <h1 class="text-5xl md:text-6xl text-yellow-300 font-bold mb-8 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]" style="-webkit-text-stroke: 2px #b45309;">
+            PETUALANGAN MATEMATIKA:<br>
+            <span class="text-4xl md:text-5xl text-white">Menyelamatkan Hutan 🌳</span>
+        </h1>
+        <button onclick="startGame()" class="btn-game bg-green-500 hover:bg-green-400 border-green-700 text-white text-3xl py-4 px-10 rounded-full shadow-lg">
+            MAIN SEKARANG! 🚀
+        </button>
+    </div>
+
+    <!-- Layar Permainan -->
+    <div id="game-screen" class="hidden z-10 flex-col items-center w-full h-full max-w-4xl p-4">
+        <!-- HUD (Heads Up Display) -->
+        <div class="w-full flex justify-between items-center mb-10 mt-4">
+            <!-- Skor -->
+            <div class="bg-yellow-400 border-4 border-yellow-600 rounded-full px-6 py-2 text-2xl text-yellow-900 shadow-md flex items-center">
+                ⭐ SKOR: <span id="score" class="ml-2">0</span>
+            </div>
+            <!-- Nyawa -->
+            <div class="bg-red-400 border-4 border-red-600 rounded-full px-6 py-2 text-2xl shadow-md flex items-center gap-2">
+                HP: <span id="lives-container">❤️❤️❤️</span>
+            </div>
+        </div>
+
+        <!-- Area Pertanyaan -->
+        <div class="flex-grow flex flex-col items-center justify-center w-full relative">
+            
+            <!-- Karakter Hewan Penanya -->
+            <div class="text-8xl mb-[-20px] z-20" id="animal-character">
+                🐿️
+            </div>
+
+            <!-- Papan Pertanyaan -->
+            <div class="wood-panel w-full max-w-xl text-center py-10 px-4 z-10 relative">
+                <p class="font-sans font-bold text-lg mb-2 text-yellow-200" id="progress-text">Soal 1 dari 5</p>
+                <h2 id="question-text" class="text-7xl tracking-widest">5 + 3 = ?</h2>
+                <div id="feedback-msg" class="absolute inset-0 flex items-center justify-center text-4xl text-green-400 opacity-0 font-bold drop-shadow-md transition-opacity duration-300 pointer-events-none">
+                    BENAR! +10
+                </div>
+            </div>
+
+            <!-- Pilihan Jawaban -->
+            <p class="text-white mt-6 mb-4 text-xl drop-shadow-md font-sans font-bold bg-black bg-opacity-30 px-4 py-1 rounded-full">
+                Pilih jawaban yang benar!
+            </p>
+            <div id="options-container" class="flex gap-4 md:gap-8 justify-center w-full px-4">
+                <!-- Tombol akan di-generate via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Layar Hasil Akhir -->
+    <div id="result-screen" class="hidden z-20 absolute inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center p-4 text-center">
+        <div class="wood-panel p-8 md:p-12 max-w-xl w-full flex flex-col items-center">
+            <h1 id="result-title" class="text-4xl md:text-5xl text-yellow-300 mb-4 leading-tight">Selamat!</h1>
+            <p id="result-message" class="text-2xl text-white mb-6 font-sans">Kamu Berhasil Menyelamatkan Hutan!</p>
+            <div class="text-3xl mb-8 bg-black bg-opacity-30 rounded-full px-6 py-2">
+                Skor Akhir: <span id="final-score" class="text-yellow-400">50</span>
+            </div>
+            <button id="restart-btn" onclick="startGame()" class="btn-game bg-blue-500 hover:bg-blue-400 border-blue-700 text-white text-2xl py-4 px-8 rounded-full shadow-lg">
+                MAIN LAGI 🔄
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Variabel Status Game
+        let score = 0;
+        let lives = 3;
+        let correctAnswers = 0;
+        const WIN_CONDITION = 5;
+        let currentAnswer = 0;
+        let isProcessing = false;
+
+        // Elemen DOM
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const resultScreen = document.getElementById('result-screen');
+        
+        const scoreEl = document.getElementById('score');
+        const livesContainer = document.getElementById('lives-container');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const progressText = document.getElementById('progress-text');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        const finalScoreEl = document.getElementById('final-score');
+        const restartBtn = document.getElementById('restart-btn');
+        const animalChar = document.getElementById('animal-character');
+
+        const animals = ['🐿️', '🐰', '🦉', '🦝', '🐻'];
+        const buttonColors = [
+            'bg-green-500 border-green-700 hover:bg-green-400', 
+            'bg-blue-500 border-blue-700 hover:bg-blue-400', 
+            'bg-red-500 border-red-700 hover:bg-red-400',
+            'bg-purple-500 border-purple-700 hover:bg-purple-400'
+        ];
+
+        // Memulai Game
+        function startGame() {
+            score = 0;
+            lives = 3;
+            correctAnswers = 0;
+            
+            updateHUD();
+            
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            gameScreen.classList.remove('hidden', 'flex'); // Tailwind reset
+            gameScreen.style.display = 'flex';
+            
+            generateQuestion();
+        }
+
+        // Memperbarui UI Skor dan Nyawa
+        function updateHUD() {
+            scoreEl.innerText = score;
+            let hearts = '';
+            for(let i=0; i<lives; i++) hearts += '❤️';
+            livesContainer.innerText = hearts || '💔';
+        }
+
+        // Membuat Pertanyaan Baru
+        function generateQuestion() {
+            isProcessing = false;
+            progressText.innerText = `Soal ${correctAnswers + 1} dari ${WIN_CONDITION}`;
+            animalChar.innerText = animals[Math.floor(Math.random() * animals.length)];
+            animalChar.classList.add('pop-effect');
+            setTimeout(() => animalChar.classList.remove('pop-effect'), 300);
+
+            // Tentukan operator (Penjumlahan atau Pengurangan)
+            const isAddition = Math.random() > 0.5;
+            let num1, num2;
+
+            if (isAddition) {
+                // Hasil maksimal 20
+                num1 = Math.floor(Math.random() * 10) + 1; // 1-10
+                num2 = Math.floor(Math.random() * 10) + 1; // 1-10
+                currentAnswer = num1 + num2;
+                questionText.innerText = `${num1} + ${num2} = ?`;
+            } else {
+                // Hasil tidak boleh negatif
+                num1 = Math.floor(Math.random() * 10) + 11; // 11-20
+                num2 = Math.floor(Math.random() * 10) + 1;  // 1-10
+                currentAnswer = num1 - num2;
+                questionText.innerText = `${num1} - ${num2} = ?`;
+            }
+
+            generateOptions();
+        }
+
+        // Membuat Pilihan Jawaban
+        function generateOptions() {
+            optionsContainer.innerHTML = '';
+            
+            let options = [currentAnswer];
+            
+            // Buat 2 jawaban salah yang unik dan masuk akal
+            while(options.length < 3) {
+                // Jawaban salah di sekitar jawaban benar (+/- 3)
+                let offset = Math.floor(Math.random() * 6) - 3;
+                let wrongAnswer = currentAnswer + offset;
+                
+                // Pastikan jawaban salah tidak sama dengan jawaban benar, lebih dari 0, dan belum ada di array
+                if (wrongAnswer !== currentAnswer && wrongAnswer > 0 && !options.includes(wrongAnswer)) {
+                    options.push(wrongAnswer);
+                }
+            }
+
+            // Acak urutan jawaban
+            options.sort(() => Math.random() - 0.5);
+
+            // Acak warna tombol
+            let shuffledColors = [...buttonColors].sort(() => Math.random() - 0.5);
+
+            // Render tombol
+            options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = `btn-game ${shuffledColors[index]} text-white text-5xl font-bold py-6 w-24 h-24 md:w-32 md:h-32 rounded-full shadow-xl flex items-center justify-center`;
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // Memeriksa Jawaban Pemain
+        function checkAnswer(selectedOption) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            if (selectedOption === currentAnswer) {
+                // Jawaban Benar
+                score += 10;
+                correctAnswers++;
+                updateHUD();
+                
+                // Animasi Sukses
+                feedbackMsg.innerText = "BENAR! +10";
+                feedbackMsg.className = "absolute inset-0 flex items-center justify-center text-4xl md:text-5xl text-green-400 font-bold drop-shadow-[0_2px_2px_rgba(0,0,0,1)] transition-opacity duration-200 z-30 bg-black bg-opacity-40 rounded-xl";
+                feedbackMsg.style.opacity = "1";
+                questionText.style.opacity = "0";
+
+                setTimeout(() => {
+                    feedbackMsg.style.opacity = "0";
+                    questionText.style.opacity = "1";
+                    
+                    if (correctAnswers >= WIN_CONDITION) {
+                        endGame(true);
+                    } else {
+                        generateQuestion();
+                    }
+                }, 1000);
+
+            } else {
+                // Jawaban Salah
+                lives--;
+                updateHUD();
+                
+                // Animasi Salah
+                document.body.classList.add('shake-effect');
+                setTimeout(() => {
+                    document.body.classList.remove('shake-effect');
+                }, 500);
+
+                if (lives <= 0) {
+                    setTimeout(() => endGame(false), 500);
+                } else {
+                    // Beri tahu salah sebentar lalu biarkan mencoba lagi
+                    feedbackMsg.innerText = "COBA LAGI!";
+                    feedbackMsg.className = "absolute inset-0 flex items-center justify-center text-4xl md:text-5xl text-red-500 font-bold drop-shadow-[0_2px_2px_rgba(0,0,0,1)] transition-opacity duration-200 z-30 bg-black bg-opacity-40 rounded-xl";
+                    feedbackMsg.style.opacity = "1";
+                    questionText.style.opacity = "0.2";
+                    
+                    setTimeout(() => {
+                        feedbackMsg.style.opacity = "0";
+                        questionText.style.opacity = "1";
+                        isProcessing = false;
+                    }, 800);
+                }
+            }
+        }
+
+        // Mengakhiri Game (Menang/Kalah)
+        function endGame(isWin) {
+            gameScreen.style.display = 'none';
+            resultScreen.classList.remove('hidden');
+            
+            finalScoreEl.innerText = score;
+
+            if (isWin) {
+                resultTitle.innerText = "🎉 SELAMAT! 🎉";
+                resultTitle.className = "text-4xl md:text-5xl text-green-400 mb-4 leading-tight font-bold";
+                resultMessage.innerText = "Kamu Berhasil Menyelamatkan Hutan dari Monster Hitungan!";
+                restartBtn.innerText = "MAIN LAGI 🔄";
+                restartBtn.className = "btn-game bg-green-500 hover:bg-green-400 border-green-700 text-white text-2xl py-4 px-8 rounded-full shadow-lg";
+            } else {
+                resultTitle.innerText = "💥 GAME OVER 💥";
+                resultTitle.className = "text-4xl md:text-5xl text-red-400 mb-4 leading-tight font-bold";
+                resultMessage.innerText = "Jangan menyerah! Hutan masih membutuhkan bantuanmu.";
+                restartBtn.innerText = "COBA LAGI 🔄";
+                restartBtn.className = "btn-game bg-red-500 hover:bg-red-400 border-red-700 text-white text-2xl py-4 px-8 rounded-full shadow-lg";
+            }
+        }
+    </script>
+</body>
+</html>
