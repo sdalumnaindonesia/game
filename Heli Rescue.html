@@ -9,7 +9,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0b132b; /* Dark theme background */
+            background-color: #0b132b; 
             color: white;
             margin: 0;
             padding: 0;
@@ -17,7 +17,7 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            touch-action: none; /* Prevent scrolling on touch devices */
+            touch-action: none; 
         }
         
         #game-container {
@@ -32,7 +32,6 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* Header Area */
         #header {
             display: flex;
             justify-content: space-between;
@@ -67,7 +66,6 @@
             font-size: 0.9rem;
         }
 
-        /* Canvas Area */
         #canvas-container {
             flex-grow: 1;
             position: relative;
@@ -79,10 +77,9 @@
             display: block;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, #001d3d 0%, #003566 100%); /* Night sky */
+            background: linear-gradient(to bottom, #001d3d 0%, #003566 100%); 
         }
 
-        /* Game Over Screen */
         #game-over {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -95,7 +92,6 @@
             display: none;
         }
 
-        /* Controls Area */
         #controls {
             display: flex;
             height: 180px;
@@ -172,7 +168,6 @@
 <body>
 
 <div id="game-container">
-    <!-- Header -->
     <div id="header">
         <div class="stats-badge text-red-400">
             <span>❤️</span> <span id="ui-lives-p1" class="text-green-400">5</span> <span class="mx-1 text-gray-500">|</span> <span id="ui-lives-p2" class="text-blue-400">5</span>
@@ -188,7 +183,6 @@
         </div>
     </div>
 
-    <!-- Game Canvas -->
     <div id="canvas-container">
         <canvas id="gameCanvas"></canvas>
         <div id="game-over">
@@ -202,9 +196,7 @@
         </div>
     </div>
 
-    <!-- Controls -->
     <div id="controls">
-        <!-- Player 1 (Green) -->
         <div class="player-control">
             <div class="text-xs text-gray-400 mb-2 font-bold tracking-widest">PEMAIN 1 (HIJAU / WASD)</div>
             <div class="flex items-center">
@@ -220,7 +212,6 @@
                 </div>
             </div>
         </div>
-        <!-- Player 2 (Blue) -->
         <div class="player-control">
             <div class="text-xs text-gray-400 mb-2 font-bold tracking-widest">PEMAIN 2 (BIRU / PANAH)</div>
             <div class="flex items-center">
@@ -240,11 +231,9 @@
 </div>
 
 <script>
-    /** @type {HTMLCanvasElement} */
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // UI Elements
     const uiLivesP1 = document.getElementById('ui-lives-p1');
     const uiLivesP2 = document.getElementById('ui-lives-p2');
     const uiTimer = document.getElementById('ui-timer');
@@ -257,7 +246,6 @@
     const gameWinnerEl = document.getElementById('game-winner');
     const gameOverTitle = document.getElementById('game-over-title');
 
-    // Game State
     let animationId;
     let timerInterval;
     let isPlaying = false;
@@ -265,60 +253,105 @@
     let p2Score = 0;
     let p1Lives = 5;
     let p2Lives = 5;
-    let timeLeft = 180; // 3 minutes
+    let timeLeft = 180; 
     let currentQuestion = {};
 
-    // Entities
     let p1, p2;
     let fires = [];
     let drops = [];
     let particles = [];
 
-    // Keys State
     const keys = {
         w: false, a: false, s: false, d: false, space: false,
         ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false, Enter: false
     };
 
-    // Resize canvas to fit container
     function resizeCanvas() {
         canvas.width = canvas.parentElement.clientWidth;
         canvas.height = canvas.parentElement.clientHeight;
     }
     window.addEventListener('resize', resizeCanvas);
 
-    // Mathematics Generator
-    function generateQuestion() {
-        const types = ['add', 'sub', 'mul', 'volume'];
-        const type = types[Math.floor(Math.random() * types.length)];
-        let qText = "";
-        let correctAns = 0;
+    // --- BANK SOAL & SISTEM PENGACAKAN ---
+    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const generators = [
+        () => { let a=rand(10,100), b=rand(10,100); return { qText: `Berapakah hasil dari ${a} + ${b}?`, correctAns: a+b }; },
+        () => { let a=rand(50,150), b=rand(10,50); return { qText: `Berapakah hasil dari ${a} - ${b}?`, correctAns: a-b }; },
+        () => { let a=rand(5,20), b=rand(5,20); return { qText: `Berapakah hasil dari ${a} x ${b}?`, correctAns: a*b }; },
+        () => { let b=rand(2,15), a=b*rand(2,15); return { qText: `Berapakah hasil dari ${a} : ${b}?`, correctAns: a/b }; },
+        () => { let a=rand(10,30); return { qText: `Berapakah hasil dari ${a}² (kuadrat)?`, correctAns: a*a }; },
+        () => { let a=rand(2,10); return { qText: `Berapakah hasil dari ${a}³ (pangkat tiga)?`, correctAns: a*a*a }; },
+        () => { let a=rand(5,25), b=a*a; return { qText: `Berapakah akar kuadrat dari ${b}?`, correctAns: a }; },
+        () => { let a=rand(2,10), b=a*a*a; return { qText: `Berapakah akar pangkat tiga dari ${b}?`, correctAns: a }; },
+        () => { let a=rand(10,50), b=rand(2,10); return { qText: `Berapakah sisa bagi (modulo) ${a} oleh ${b}?`, correctAns: a%b }; },
+        () => { let a=rand(2,5), b=rand(2,5), c=rand(2,5); return { qText: `Berapakah hasil dari ${a} x ${b} x ${c}?`, correctAns: a*b*c }; },
+        () => { let x=rand(5,20), a=rand(5,20), b=x+a; return { qText: `Jika x + ${a} = ${b}, berapakah nilai x?`, correctAns: x }; },
+        () => { let x=rand(5,20), a=rand(5,20), b=x-a; return { qText: `Jika x - ${a} = ${b}, berapakah nilai x?`, correctAns: x }; },
+        () => { let x=rand(5,20), a=rand(5,50), b=a-x; return { qText: `Jika ${a} - x = ${b}, berapakah nilai x?`, correctAns: x }; },
+        () => { let x=rand(3,12), a=rand(2,10), b=a*x; return { qText: `Jika ${a}x = ${b}, berapakah nilai x?`, correctAns: x }; },
+        () => { let x=rand(2,10), a=rand(2,8), c=rand(5,20), b=(a*x)+c; return { qText: `Jika ${a}x + ${c} = ${b}, berapakah x?`, correctAns: x }; },
+        () => { let x=rand(5,20), a=rand(2,10), b=x/a; return { qText: `Jika x / ${a} = ${b}, berapakah nilai x?`, correctAns: x }; },
+        () => { let a=rand(10,50), pct=rand(1,9)*10; return { qText: `Berapakah ${pct}% dari ${a}?`, correctAns: (pct/100)*a }; },
+        () => { let x=rand(2,10), y=rand(2,10); return { qText: `Berapakah hasil dari 2(${x} + ${y})?`, correctAns: 2*(x+y) }; },
+        () => { let a=rand(1,5), b=rand(1,5), x=rand(2,5); return { qText: `Jika x = ${x}, berapakah nilai ${a}x + ${b}?`, correctAns: a*x+b }; },
+        () => { let a=rand(1,5), b=rand(1,5), x=rand(2,5); return { qText: `Jika x = ${x}, berapakah nilai ${a}x - ${b}?`, correctAns: a*x-b }; },
+        () => { let s=rand(5,20); return { qText: `Berapakah luas persegi dengan sisi ${s} cm?`, correctAns: s*s }; },
+        () => { let s=rand(5,20); return { qText: `Berapakah keliling persegi dengan sisi ${s} cm?`, correctAns: 4*s }; },
+        () => { let p=rand(10,20), l=rand(5,15); return { qText: `Berapakah luas persegi panjang: p=${p} cm, l=${l} cm?`, correctAns: p*l }; },
+        () => { let p=rand(10,20), l=rand(5,15); return { qText: `Berapakah keliling persegi panjang: p=${p} cm, l=${l} cm?`, correctAns: 2*(p+l) }; },
+        () => { let a=rand(5,15)*2, t=rand(4,12); return { qText: `Berapakah luas segitiga dengan alas ${a} cm dan tinggi ${t} cm?`, correctAns: (a*t)/2 }; },
+        () => { let s=rand(5,25); return { qText: `Berapakah keliling segitiga sama sisi dengan sisi ${s} cm?`, correctAns: 3*s }; },
+        () => { let d1=rand(4,10)*2, d2=rand(4,10)*2; return { qText: `Berapakah luas belah ketupat dengan diagonal ${d1} cm dan ${d2} cm?`, correctAns: (d1*d2)/2 }; },
+        () => { let a=rand(5,15), t=rand(5,15); return { qText: `Berapakah luas jajar genjang dengan alas ${a} cm dan tinggi ${t} cm?`, correctAns: a*t }; },
+        () => { let r=rand(1,5)*7; return { qText: `Keliling lingkaran jari-jari ${r} cm? (π = 22/7)`, correctAns: 2*22*(r/7) }; },
+        () => { let r=rand(1,5)*7; return { qText: `Luas lingkaran jari-jari ${r} cm? (π = 22/7)`, correctAns: 22*(r/7)*r }; },
+        () => { let s=rand(3,10); return { qText: `Berapakah volume kubus dengan rusuk ${s} cm?`, correctAns: s*s*s }; },
+        () => { let s=rand(3,10); return { qText: `Berapakah luas permukaan kubus dengan rusuk ${s} cm?`, correctAns: 6*s*s }; },
+        () => { let p=rand(5,15), l=rand(3,10), t=rand(2,8); return { qText: `Volume balok dengan p=${p} cm, l=${l} cm, t=${t} cm?`, correctAns: p*l*t }; },
+        () => { let vol=rand(10,50)*10, p=rand(2,10), l=rand(2,5), t=vol/(p*l); return { qText: `Balok bervolume ${vol}. Jika p=${p} dan l=${l}, berapa t?`, correctAns: t }; },
+        () => { let a=rand(3,10)*2, tSegitiga=rand(4,10), tPrisma=rand(5,15); return { qText: `Prisma segitiga (alas=${a}, t.alas=${tSegitiga}, t.prisma=${tPrisma}). Volume?`, correctAns: ((a*tSegitiga)/2)*tPrisma }; },
+        () => { let km=rand(2,15); return { qText: `${km} kilometer sama dengan berapa meter?`, correctAns: km*1000 }; },
+        () => { let m=rand(5,50); return { qText: `${m} meter sama dengan berapa centimeter?`, correctAns: m*100 }; },
+        () => { let cm=rand(10,100); return { qText: `${cm} centimeter sama dengan berapa milimeter?`, correctAns: cm*10 }; },
+        () => { let m=rand(1,5)*1000; return { qText: `${m} meter sama dengan berapa kilometer?`, correctAns: m/1000 }; },
+        () => { let kg=rand(2,10); return { qText: `${kg} kilogram sama dengan berapa gram?`, correctAns: kg*1000 }; },
+        () => { let ton=rand(1,5); return { qText: `${ton} ton sama dengan berapa kilogram?`, correctAns: ton*1000 }; },
+        () => { let g=rand(1,5)*1000; return { qText: `${g} gram sama dengan berapa kilogram?`, correctAns: g/1000 }; },
+        () => { let jam=rand(2,8); return { qText: `${jam} jam sama dengan berapa menit?`, correctAns: jam*60 }; },
+        () => { let menit=rand(2,10); return { qText: `${menit} menit sama dengan berapa detik?`, correctAns: menit*60 }; },
+        () => { let jam=rand(1,3); return { qText: `${jam} jam sama dengan berapa detik?`, correctAns: jam*3600 }; },
+        () => { let hari=rand(2,5); return { qText: `${hari} hari sama dengan berapa jam?`, correctAns: hari*24 }; },
+        () => { let tahun=rand(2,10); return { qText: `${tahun} tahun sama dengan berapa bulan?`, correctAns: tahun*12 }; },
+        () => { let v=rand(4,10)*10, t=rand(2,5); return { qText: `Mobil melaju ${v} km/jam selama ${t} jam. Jarak ditempuh?`, correctAns: v*t }; },
+        () => { let s=rand(5,20)*10, t=rand(2,5); let v=s/t; return { qText: `Jarak ${s} km ditempuh dalam ${t} jam. Kecepatan rata-rata (km/jam)?`, correctAns: v }; },
+        () => { let h=rand(10,50)*1000, d=rand(1,5)*10, diskon=(d/100)*h; return { qText: `Barang Rp${h} didiskon ${d}%. Berapa potongan harganya?`, correctAns: diskon }; }
+    ];
 
-        if (type === 'add') {
-            const a = Math.floor(Math.random() * 50) + 10;
-            const b = Math.floor(Math.random() * 50) + 10;
-            qText = `Berapakah hasil dari ${a} + ${b}?`;
-            correctAns = a + b;
-        } else if (type === 'sub') {
-            const a = Math.floor(Math.random() * 50) + 50;
-            const b = Math.floor(Math.random() * 40) + 1;
-            qText = `Berapakah hasil dari ${a} - ${b}?`;
-            correctAns = a - b;
-        } else if (type === 'mul') {
-            const a = Math.floor(Math.random() * 10) + 2;
-            const b = Math.floor(Math.random() * 10) + 2;
-            qText = `Berapakah hasil dari ${a} x ${b}?`;
-            correctAns = a * b;
-        } else if (type === 'volume') {
-            const p = Math.floor(Math.random() * 8) + 2;
-            const l = Math.floor(Math.random() * 5) + 2;
-            const t = Math.floor(Math.random() * 5) + 2;
-            const vol = p * l * t;
-            qText = `Bak air bervolume ${vol} dm³. Jika panjang ${p} dm, lebar ${l} dm, berapa tingginya?`;
-            correctAns = t;
+    let questionQueue = [];
+
+    // Fungsi untuk mengacak urutan index soal agar tidak berurutan dan tidak cepat berulang
+    function shuffleQueue() {
+        questionQueue = Array.from({length: generators.length}, (_, i) => i);
+        for (let i = questionQueue.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [questionQueue[i], questionQueue[j]] = [questionQueue[j], questionQueue[i]];
         }
+    }
 
-        let wrongAns = correctAns + (Math.floor(Math.random() * 10) - 5);
+    function generateQuestion() {
+        // Jika antrean soal habis, acak ulang
+        if (questionQueue.length === 0) {
+            shuffleQueue();
+        }
+        
+        const index = questionQueue.pop();
+        const questionData = generators[index]();
+
+        let correctAns = questionData.correctAns;
+        let qText = questionData.qText;
+
+        // Bikin jawaban salah yang masuk akal
+        let wrongAns = correctAns + rand(1, 10) * (Math.random() > 0.5 ? 1 : -1);
         if (wrongAns === correctAns) wrongAns += 2;
         if (wrongAns <= 0 && correctAns > 0) wrongAns = correctAns + 3;
 
@@ -333,7 +366,6 @@
         const yPos = canvas.height - 80;
         const xSpace = canvas.width / 3;
         
-        // Randomize which side is correct
         const correctOnLeft = Math.random() > 0.5;
         
         fires.push({
@@ -353,7 +385,6 @@
         });
     }
 
-    // Helicopter Class
     class Helicopter {
         constructor(x, y, colorCode, isP1) {
             this.x = x;
@@ -373,10 +404,9 @@
 
         update() {
             if (this.isDead) {
-                this.y += 2; // Jatuh perlahan jika nyawa habis
+                this.y += 2; 
                 return;
             }
-            // Apply input
             if (this.isP1) {
                 if (keys.w) this.vy -= 1;
                 if (keys.s) this.vy += 1;
@@ -389,13 +419,11 @@
                 if (keys.ArrowRight) this.vx += 1;
             }
 
-            // Physics
             this.vx *= this.friction;
             this.vy *= this.friction;
             this.x += this.vx;
             this.y += this.vy;
 
-            // Boundaries
             if (this.x < this.width/2) this.x = this.width/2;
             if (this.x > canvas.width - this.width/2) this.x = canvas.width - this.width/2;
             if (this.y < this.height) this.y = this.height;
@@ -409,15 +437,12 @@
             ctx.save();
             ctx.translate(this.x, this.y);
             
-            // Tilt based on velocity
             ctx.rotate(this.vx * 0.05);
 
-            // Tail
             ctx.fillStyle = this.color;
             ctx.fillRect(-this.width/2 - 20, -5, 30, 10);
-            ctx.fillRect(-this.width/2 - 25, -15, 10, 20); // Tail rotor fin
+            ctx.fillRect(-this.width/2 - 25, -15, 10, 20); 
 
-            // Body
             ctx.beginPath();
             ctx.ellipse(0, 0, this.width/2, this.height/2, 0, 0, Math.PI * 2);
             ctx.fillStyle = this.color;
@@ -426,13 +451,11 @@
             ctx.strokeStyle = '#fff';
             ctx.stroke();
 
-            // Cockpit Window
             ctx.beginPath();
             ctx.ellipse(15, -2, 10, 8, 0, 0, Math.PI * 2);
             ctx.fillStyle = '#caf0f8';
             ctx.fill();
 
-            // Landing Skids
             ctx.strokeStyle = '#aaa';
             ctx.lineWidth = 3;
             ctx.beginPath();
@@ -441,7 +464,6 @@
             ctx.moveTo(-25, 25); ctx.lineTo(25, 25);
             ctx.stroke();
 
-            // Water bucket
             ctx.beginPath();
             ctx.moveTo(0, 25); ctx.lineTo(0, 40);
             ctx.stroke();
@@ -450,10 +472,9 @@
             
             if (this.hasWater) {
                 ctx.fillStyle = '#0077b6';
-                ctx.fillRect(-6, 42, 12, 8); // Ada air
+                ctx.fillRect(-6, 42, 12, 8); 
             }
 
-            // Main Rotor
             ctx.save();
             ctx.translate(0, -18);
             ctx.rotate(this.rotorAngle);
@@ -461,7 +482,6 @@
             ctx.fillRect(-40, -2, 80, 4);
             ctx.restore();
             
-            // Rotor shaft
             ctx.fillStyle = '#888';
             ctx.fillRect(-2, -18, 4, 8);
 
@@ -477,7 +497,7 @@
                 vy: 5,
                 owner: this.isP1 ? 'P1' : 'P2'
             });
-            this.hasWater = false; // Air kosong setelah menyiram
+            this.hasWater = false; 
         }
     }
 
@@ -497,6 +517,7 @@
         timeLeft = 180;
         drops = [];
         particles = [];
+        questionQueue = []; // Reset antrean
         
         updateUI();
         updateTimerDisplay();
@@ -550,7 +571,6 @@
     }
 
     function drawBackground() {
-        // Hills
         ctx.fillStyle = '#1b4332';
         ctx.beginPath();
         ctx.moveTo(0, canvas.height);
@@ -569,7 +589,6 @@
         ctx.lineTo(canvas.width, canvas.height);
         ctx.fill();
 
-        // Lake for water filling
         ctx.fillStyle = 'rgba(72, 202, 228, 0.7)';
         ctx.beginPath();
         ctx.ellipse(100, canvas.height - 20, 180, 80, 0, 0, Math.PI * 2);
@@ -579,7 +598,6 @@
         ctx.ellipse(80, canvas.height - 10, 140, 50, 0, 0, Math.PI * 2);
         ctx.fill();
         
-        // Label Area Isi Air
         ctx.fillStyle = 'white';
         ctx.font = 'bold 18px Inter';
         ctx.textAlign = 'center';
@@ -592,18 +610,15 @@
         fires.forEach(fire => {
             if (!fire.active) return;
             
-            // Draw Fire flame (animated)
             ctx.save();
             ctx.translate(fire.x, fire.y);
             
-            // Glow
             const gradient = ctx.createRadialGradient(0, -20, 5, 0, -20, 60);
             gradient.addColorStop(0, 'rgba(255, 100, 0, 0.6)');
             gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
             ctx.fillStyle = gradient;
             ctx.beginPath(); ctx.arc(0, -20, 60, 0, Math.PI*2); ctx.fill();
 
-            // Flame shapes
             ctx.fillStyle = '#d62828';
             ctx.beginPath();
             ctx.moveTo(-30, 10);
@@ -625,7 +640,6 @@
             ctx.quadraticCurveTo(5 + Math.cos(time*2)*3, -15, 10, 10);
             ctx.fill();
 
-            // Answer Label
             ctx.fillStyle = 'rgba(0,0,0,0.7)';
             ctx.beginPath(); ctx.roundRect(-45, -110, 90, 35, 10); ctx.fill();
             ctx.fillStyle = 'white';
@@ -652,23 +666,20 @@
     function drawAndUpdateDrops() {
         for (let i = drops.length - 1; i >= 0; i--) {
             let d = drops[i];
-            d.vy += 0.2; // Gravity
+            d.vy += 0.2; 
             d.y += d.vy;
             
-            // Draw
             ctx.fillStyle = '#48cae4';
             ctx.beginPath();
             ctx.ellipse(d.x, d.y, 6, 10, 0, 0, Math.PI*2);
             ctx.fill();
 
-            // Collision with fire
             let hit = false;
             fires.forEach(fire => {
                 if(fire.active && Math.abs(d.x - fire.x) < 40 && Math.abs(d.y - fire.y) < 40) {
                     hit = true;
                     
                     if(fire.isCorrect) {
-                        // Tambah skor sesuai pemilik air
                         if (d.owner === 'P1') p1Score += 10;
                         else p2Score += 10;
                         
@@ -676,7 +687,6 @@
                         createParticles(fire.x, fire.y, '#06d6a0'); 
                         generateQuestion(); 
                     } else {
-                        // Kurangi nyawa sesuai pemilik air
                         if (d.owner === 'P1') {
                             p1Lives--;
                             if(p1Lives <= 0) p1.isDead = true;
@@ -689,7 +699,6 @@
                         createParticles(fire.x, fire.y, '#d62828'); 
                         generateQuestion(); 
                         
-                        // Cek jika nyawa kedua pemain habis
                         if(p1Lives <= 0 && p2Lives <= 0) {
                             endGame("SEMUA HELIKOPTER JATUH!");
                         }
@@ -702,7 +711,6 @@
             }
         }
 
-        // Particles
         for(let i = particles.length - 1; i >= 0; i--) {
             let p = particles[i];
             p.x += p.vx;
@@ -718,13 +726,11 @@
         }
     }
     
-    // Logika Mengisi Air di Danau
     function checkRefill(p) {
         if (!p.isDead && !p.hasWater) {
-            // Area danau berada di kiri bawah
             if (p.x < 250 && p.y > canvas.height - 120) {
                 p.hasWater = true;
-                createParticles(p.x, p.y + 20, '#48cae4'); // Efek percikan air masuk
+                createParticles(p.x, p.y + 20, '#48cae4'); 
             }
         }
     }
@@ -750,10 +756,8 @@
         animationId = requestAnimationFrame(gameLoop);
     }
 
-    // Input Handling (Keyboard)
     window.addEventListener('keydown', (e) => {
         if(keys.hasOwnProperty(e.key)) keys[e.key] = true;
-        // Map space and enter to siram actions
         if(e.code === 'Space' && isPlaying) { e.preventDefault(); p1.dropWater(); }
         if(e.code === 'Enter' && isPlaying) { e.preventDefault(); p2.dropWater(); }
     });
@@ -761,7 +765,6 @@
         if(keys.hasOwnProperty(e.key)) keys[e.key] = false;
     });
 
-    // Input Handling (On-screen Buttons)
     function setupBtn(id, keyObj, keyName) {
         const btn = document.getElementById(id);
         if(!btn) return;
@@ -796,10 +799,8 @@
     btnP2Siram.addEventListener('mousedown', handleP2Siram);
     btnP2Siram.addEventListener('touchstart', handleP2Siram);
 
-    // Global start wrapper
     window.startGame = initGame;
 
-    // Start on load
     window.onload = () => {
         initGame();
     };
