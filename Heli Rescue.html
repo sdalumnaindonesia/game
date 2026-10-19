@@ -329,7 +329,6 @@
 
     let questionQueue = [];
 
-    // Fungsi untuk mengacak urutan index soal agar tidak berurutan dan tidak cepat berulang
     function shuffleQueue() {
         questionQueue = Array.from({length: generators.length}, (_, i) => i);
         for (let i = questionQueue.length - 1; i > 0; i--) {
@@ -339,7 +338,6 @@
     }
 
     function generateQuestion() {
-        // Jika antrean soal habis, acak ulang
         if (questionQueue.length === 0) {
             shuffleQueue();
         }
@@ -350,7 +348,6 @@
         let correctAns = questionData.correctAns;
         let qText = questionData.qText;
 
-        // Bikin jawaban salah yang masuk akal
         let wrongAns = correctAns + rand(1, 10) * (Math.random() > 0.5 ? 1 : -1);
         if (wrongAns === correctAns) wrongAns += 2;
         if (wrongAns <= 0 && correctAns > 0) wrongAns = correctAns + 3;
@@ -364,12 +361,15 @@
     function setupFires() {
         fires = [];
         const yPos = canvas.height - 80;
-        const xSpace = canvas.width / 3;
+        
+        // Atur posisi api di sisi kiri dan kanan (karena kolam sekarang di tengah)
+        const xLeft = canvas.width / 4;
+        const xRight = (canvas.width / 4) * 3;
         
         const correctOnLeft = Math.random() > 0.5;
         
         fires.push({
-            x: xSpace, y: yPos,
+            x: xLeft, y: yPos,
             radius: 40,
             answer: correctOnLeft ? currentQuestion.correct : currentQuestion.wrong,
             isCorrect: correctOnLeft,
@@ -377,7 +377,7 @@
         });
 
         fires.push({
-            x: xSpace * 2, y: yPos,
+            x: xRight, y: yPos,
             radius: 40,
             answer: !correctOnLeft ? currentQuestion.correct : currentQuestion.wrong,
             isCorrect: !correctOnLeft,
@@ -517,13 +517,13 @@
         timeLeft = 180;
         drops = [];
         particles = [];
-        questionQueue = []; // Reset antrean
+        questionQueue = []; 
         
         updateUI();
         updateTimerDisplay();
 
-        p1 = new Helicopter(canvas.width / 3, 100, '#06d6a0', true);
-        p2 = new Helicopter((canvas.width / 3) * 2, 100, '#118ab2', false);
+        p1 = new Helicopter(canvas.width / 4, 100, '#06d6a0', true);
+        p2 = new Helicopter((canvas.width / 4) * 3, 100, '#118ab2', false);
 
         generateQuestion();
         
@@ -589,19 +589,20 @@
         ctx.lineTo(canvas.width, canvas.height);
         ctx.fill();
 
+        // Menggeser kolam air ke tengah (menggunakan canvas.width / 2)
         ctx.fillStyle = 'rgba(72, 202, 228, 0.7)';
         ctx.beginPath();
-        ctx.ellipse(100, canvas.height - 20, 180, 80, 0, 0, Math.PI * 2);
+        ctx.ellipse(canvas.width / 2, canvas.height - 20, 180, 80, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = 'rgba(144, 224, 239, 0.5)';
         ctx.beginPath();
-        ctx.ellipse(80, canvas.height - 10, 140, 50, 0, 0, Math.PI * 2);
+        ctx.ellipse(canvas.width / 2, canvas.height - 10, 140, 50, 0, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.fillStyle = 'white';
         ctx.font = 'bold 18px Inter';
         ctx.textAlign = 'center';
-        ctx.fillText("💧 ISI AIR", 100, canvas.height - 40);
+        ctx.fillText("💧 ISI AIR", canvas.width / 2, canvas.height - 40);
     }
 
     function drawFires() {
@@ -728,7 +729,8 @@
     
     function checkRefill(p) {
         if (!p.isDead && !p.hasWater) {
-            if (p.x < 250 && p.y > canvas.height - 120) {
+            // Memeriksa hitbox air berdasarkan posisi x di tengah (canvas.width/2)
+            if (Math.abs(p.x - canvas.width / 2) < 180 && p.y > canvas.height - 120) {
                 p.hasWater = true;
                 createParticles(p.x, p.y + 20, '#48cae4'); 
             }
