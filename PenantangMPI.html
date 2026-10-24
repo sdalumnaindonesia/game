@@ -132,7 +132,31 @@
                     <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600 mb-6 relative z-10">
                         Selamat Datang Pahlawan Sains!
                     </h1>
-                    <img src="https://placehold.co/600x300/a7f3d0/065f46?text=Ilustrasi+Paru-Paru+Sehat" alt="Ilustrasi" class="rounded-2xl shadow-md mx-auto mb-6 w-full max-w-lg object-cover">
+                    
+                    <div class="rounded-3xl shadow-md mx-auto mb-8 w-full max-w-lg bg-gradient-to-br from-green-100 to-blue-50 overflow-hidden flex justify-center items-center p-6 border-4 border-white relative z-10">
+                        <!-- Ilustrasi Paru-paru Imut -->
+                        <svg viewBox="0 0 200 150" class="w-full h-auto max-h-64 drop-shadow-lg">
+                            <!-- Batang tenggorokan -->
+                            <path d="M100,20 L100,50" stroke="#60A5FA" stroke-width="8" stroke-linecap="round"/>
+                            <path d="M100,50 L80,70" stroke="#60A5FA" stroke-width="6" stroke-linecap="round"/>
+                            <path d="M100,50 L120,70" stroke="#60A5FA" stroke-width="6" stroke-linecap="round"/>
+                            <!-- Paru-paru kiri & kanan -->
+                            <path d="M60,60 C40,50 20,80 30,120 C35,140 70,140 85,110 C90,100 85,75 80,70" fill="#F472B6"/>
+                            <path d="M140,60 C160,50 180,80 170,120 C165,140 130,140 115,110 C110,100 115,75 120,70" fill="#F472B6"/>
+                            <!-- Wajah -->
+                            <circle cx="55" cy="95" r="4" fill="#1E293B"/>
+                            <circle cx="75" cy="95" r="4" fill="#1E293B"/>
+                            <path d="M60,105 Q65,115 70,105" stroke="#1E293B" fill="transparent" stroke-width="3" stroke-linecap="round"/>
+                            <circle cx="125" cy="95" r="4" fill="#1E293B"/>
+                            <circle cx="145" cy="95" r="4" fill="#1E293B"/>
+                            <path d="M130,105 Q135,115 140,105" stroke="#1E293B" fill="transparent" stroke-width="3" stroke-linecap="round"/>
+                            <!-- Pipi merah -->
+                            <circle cx="45" cy="100" r="5" fill="#BE185D" opacity="0.3"/>
+                            <circle cx="85" cy="100" r="5" fill="#BE185D" opacity="0.3"/>
+                            <circle cx="115" cy="100" r="5" fill="#BE185D" opacity="0.3"/>
+                            <circle cx="155" cy="100" r="5" fill="#BE185D" opacity="0.3"/>
+                        </svg>
+                    </div>
                     
                     <p class="text-lg md:text-xl text-slate-600 mb-8 font-medium relative z-10">
                         Tahukah kamu? Setiap hari kita bernapas lebih dari 20.000 kali! Tapi, bagaimana ya cara udara bisa masuk dan keluar dari tubuh kita? Mari kita jelajahi keajaiban <strong>Cara Tubuh Bernapas</strong> bersama-sama!
@@ -251,7 +275,28 @@
                     <!-- Halaman Materi 1 -->
                     <div id="materi-page-1" class="materi-content block fade-in">
                         <h3 class="text-2xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-4">Pengantar Sistem Pernapasan</h3>
-                        <img src="https://placehold.co/800x300/bfdbfe/1e3a8a?text=Manusia+Bernapas" alt="Pengantar" class="rounded-xl w-full object-cover mb-4">
+                        
+                        <div class="rounded-2xl w-full h-56 bg-gradient-to-b from-sky-200 to-green-200 overflow-hidden relative mb-6 flex items-end justify-center shadow-inner">
+                            <svg viewBox="0 0 400 150" class="w-full h-full absolute bottom-0">
+                                <!-- Matahari & Awan -->
+                                <circle cx="350" cy="40" r="25" fill="#FEF08A"/>
+                                <path d="M50,50 C40,50 30,60 40,70 C35,80 50,90 60,80 C70,90 85,80 80,70 C90,60 80,50 70,50 C65,40 55,40 50,50" fill="#FFFFFF" opacity="0.8"/>
+                                <!-- Pohon -->
+                                <rect x="280" y="80" width="15" height="70" fill="#78350F" rx="3"/>
+                                <circle cx="290" cy="70" r="35" fill="#10B981"/>
+                                <circle cx="260" cy="90" r="25" fill="#059669"/>
+                                <circle cx="320" cy="90" r="25" fill="#047857"/>
+                                <!-- Tanah -->
+                                <rect y="130" width="400" height="20" fill="#22C55E"/>
+                                <!-- Orang bernapas -->
+                                <circle cx="150" cy="100" r="12" fill="#FDBA74"/> <!-- Kepala -->
+                                <rect x="142" y="112" width="16" height="30" rx="6" fill="#3B82F6"/> <!-- Badan -->
+                                <!-- Oksigen masuk -->
+                                <path d="M110,95 Q125,90 140,98" stroke="#0EA5E9" stroke-width="3" fill="none" stroke-dasharray="4,4" class="pulse-anim"/>
+                                <text x="95" y="90" font-size="12" fill="#0284C7" font-weight="bold">O₂</text>
+                            </svg>
+                        </div>
+                        
                         <div class="prose max-w-none text-slate-700 leading-relaxed">
                             <p class="text-lg">Setiap makhluk hidup pasti bernapas, termasuk manusia. <strong>Bernapas</strong> adalah proses menghirup oksigen (O2) dari udara bebas dan mengeluarkan karbon dioksida (CO2) serta uap air.</p>
                             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 my-4 flex gap-4 items-start">
@@ -272,8 +317,17 @@
                         <div class="space-y-6">
                             <!-- Hidung -->
                             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row hover:shadow-md transition duration-300">
-                                <div class="md:w-2/5">
-                                    <img src="https://placehold.co/400x300/fecaca/dc2626?text=Gambar+Hidung+&+Rongga" alt="Rongga Hidung" class="w-full h-full object-cover">
+                                <div class="md:w-2/5 bg-red-50 flex justify-center items-center p-6 border-b md:border-b-0 md:border-r border-red-100">
+                                    <svg viewBox="0 0 100 100" class="w-full h-auto max-h-48 drop-shadow-sm">
+                                        <!-- Wajah -->
+                                        <path d="M20,10 C45,10 55,30 65,40 C75,50 80,60 70,70 C60,80 50,75 40,80 C35,85 45,100 40,110 L10,110 L10,10 Z" fill="#FDE68A"/>
+                                        <!-- Rongga hidung (highlight) -->
+                                        <path d="M65,45 C50,45 40,40 40,55 C40,65 55,60 65,60" fill="#EF4444" opacity="0.7"/>
+                                        <!-- Partikel udara -->
+                                        <circle cx="85" cy="50" r="2" fill="#3B82F6"/><circle cx="75" cy="53" r="2" fill="#3B82F6"/>
+                                        <circle cx="80" cy="58" r="2" fill="#3B82F6"/><circle cx="90" cy="55" r="2" fill="#3B82F6"/>
+                                        <path d="M90,52 L70,52 M85,57 L68,57" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-dasharray="2,2"/>
+                                    </svg>
                                 </div>
                                 <div class="p-6 md:w-3/5 flex flex-col justify-center">
                                     <div class="flex items-center gap-3 mb-3">
@@ -291,8 +345,19 @@
 
                             <!-- Faring & Laring -->
                             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row hover:shadow-md transition duration-300">
-                                <div class="md:w-2/5 md:order-2">
-                                    <img src="https://placehold.co/400x300/ffedd5/ea580c?text=Gambar+Faring+&+Laring" alt="Faring dan Laring" class="w-full h-full object-cover">
+                                <div class="md:w-2/5 md:order-2 bg-orange-50 flex justify-center items-center p-6 border-b md:border-b-0 md:border-l border-orange-100">
+                                    <svg viewBox="0 0 100 100" class="w-full h-auto max-h-48 drop-shadow-sm">
+                                        <!-- Saluran tenggorokan -->
+                                        <path d="M40,10 L40,40 C40,50 30,50 30,90 L70,90 C70,50 60,50 60,40 L60,10" fill="#FCA5A5"/>
+                                        <!-- Epiglotis (katup) -->
+                                        <rect x="42" y="38" width="16" height="5" rx="2" fill="#EA580C" transform="rotate(-15 45 45)"/>
+                                        <!-- Pita Suara / Laring -->
+                                        <rect x="35" y="60" width="30" height="15" rx="5" fill="#F97316"/>
+                                        <line x1="40" y1="67" x2="60" y2="67" stroke="#FFF" stroke-width="2"/>
+                                        <!-- Teks penanda -->
+                                        <text x="50" y="30" font-size="10" text-anchor="middle" font-weight="bold" fill="#7C2D12">FARING</text>
+                                        <text x="50" y="71" font-size="9" text-anchor="middle" font-weight="bold" fill="#FFFFFF">LARING</text>
+                                    </svg>
                                 </div>
                                 <div class="p-6 md:w-3/5 flex flex-col justify-center md:order-1">
                                     <div class="flex items-center gap-3 mb-3">
@@ -306,8 +371,16 @@
 
                             <!-- Trakea -->
                             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row hover:shadow-md transition duration-300">
-                                <div class="md:w-2/5">
-                                    <img src="https://placehold.co/400x300/fef08a/ca8a04?text=Gambar+Trakea+(Tulang+Rawan)" alt="Trakea" class="w-full h-full object-cover">
+                                <div class="md:w-2/5 bg-yellow-50 flex justify-center items-center p-6 border-b md:border-b-0 md:border-r border-yellow-100">
+                                    <svg viewBox="0 0 100 100" class="w-full h-auto max-h-48 drop-shadow-sm">
+                                        <!-- Pipa Trakea -->
+                                        <rect x="35" y="10" width="30" height="80" fill="#FEF08A" rx="2"/>
+                                        <!-- Cincin tulang rawan -->
+                                        <path d="M35,20 L65,20 M35,35 L65,35 M35,50 L65,50 M35,65 L65,65 M35,80 L65,80" stroke="#CA8A04" stroke-width="6" stroke-linecap="round"/>
+                                        <!-- Ilustrasi silia (rambut getar) di dalam -->
+                                        <path d="M40,25 L45,20 M40,40 L45,35 M40,55 L45,50" stroke="#A16207" stroke-width="1.5" stroke-linecap="round"/>
+                                        <path d="M60,25 L55,20 M60,40 L55,35 M60,55 L55,50" stroke="#A16207" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
                                 </div>
                                 <div class="p-6 md:w-3/5 flex flex-col justify-center">
                                     <div class="flex items-center gap-3 mb-3">
@@ -331,8 +404,17 @@
                         <div class="space-y-6">
                             <!-- Bronkus & Bronkiolus -->
                             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row hover:shadow-md transition duration-300">
-                                <div class="md:w-2/5">
-                                    <img src="https://placehold.co/400x300/e9d5ff/7e22ce?text=Cabang+Bronkus+&+Bronkiolus" alt="Bronkus dan Bronkiolus" class="w-full h-full object-cover">
+                                <div class="md:w-2/5 bg-purple-50 flex justify-center items-center p-6 border-b md:border-b-0 md:border-r border-purple-100">
+                                    <svg viewBox="0 0 100 100" class="w-full h-auto max-h-48 drop-shadow-sm">
+                                        <!-- Trakea bawah -->
+                                        <path d="M50,5 L50,35" stroke="#A855F7" stroke-width="12" stroke-linecap="round"/>
+                                        <!-- Bronkus (Cabang utama) -->
+                                        <path d="M50,30 L20,65 M50,30 L80,65" stroke="#9333EA" stroke-width="8" stroke-linecap="round"/>
+                                        <!-- Bronkiolus (Cabang kecil) -->
+                                        <path d="M20,65 L10,85 M20,65 L30,85 M80,65 L70,85 M80,65 L90,85" stroke="#7E22CE" stroke-width="4" stroke-linecap="round"/>
+                                        <path d="M10,85 L5,95 M10,85 L15,95 M30,85 L25,95 M30,85 L35,95" stroke="#6B21A8" stroke-width="2" stroke-linecap="round"/>
+                                        <path d="M70,85 L65,95 M70,85 L75,95 M90,85 L85,95 M90,85 L95,95" stroke="#6B21A8" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
                                 </div>
                                 <div class="p-6 md:w-3/5 flex flex-col justify-center">
                                     <div class="flex items-center gap-3 mb-3">
@@ -346,8 +428,23 @@
 
                             <!-- Alveolus -->
                             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row hover:shadow-md transition duration-300">
-                                <div class="md:w-2/5 md:order-2">
-                                    <img src="https://placehold.co/400x300/bfdbfe/1d4ed8?text=Gelembung+Alveolus" alt="Alveolus" class="w-full h-full object-cover">
+                                <div class="md:w-2/5 md:order-2 bg-blue-50 flex justify-center items-center p-6 border-b md:border-b-0 md:border-l border-blue-100">
+                                    <svg viewBox="0 0 100 100" class="w-full h-auto max-h-48 drop-shadow-sm">
+                                        <!-- Ujung bronkiolus -->
+                                        <path d="M50,5 L50,35" stroke="#3B82F6" stroke-width="6" stroke-linecap="round"/>
+                                        <!-- Gelembung Alveolus -->
+                                        <circle cx="35" cy="45" r="14" fill="#93C5FD" stroke="#2563EB" stroke-width="3"/>
+                                        <circle cx="65" cy="45" r="14" fill="#93C5FD" stroke="#2563EB" stroke-width="3"/>
+                                        <circle cx="25" cy="65" r="14" fill="#93C5FD" stroke="#2563EB" stroke-width="3"/>
+                                        <circle cx="50" cy="70" r="14" fill="#93C5FD" stroke="#2563EB" stroke-width="3"/>
+                                        <circle cx="75" cy="65" r="14" fill="#93C5FD" stroke="#2563EB" stroke-width="3"/>
+                                        <!-- Kapiler Darah -->
+                                        <path d="M10,50 C25,30 45,85 85,50" stroke="#EF4444" stroke-width="4" fill="none"/>
+                                        <path d="M15,70 C35,90 60,30 90,70" stroke="#1D4ED8" stroke-width="4" fill="none"/>
+                                        <!-- Panah O2 dan CO2 -->
+                                        <text x="40" y="30" font-size="10" fill="#047857" font-weight="bold">O₂↓</text>
+                                        <text x="55" y="30" font-size="10" fill="#B91C1C" font-weight="bold">CO₂↑</text>
+                                    </svg>
                                 </div>
                                 <div class="p-6 md:w-3/5 flex flex-col justify-center md:order-1">
                                     <div class="flex items-center gap-3 mb-3">
@@ -363,8 +460,17 @@
                             
                             <!-- Paru-paru -->
                             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row hover:shadow-md transition duration-300">
-                                <div class="md:w-2/5">
-                                    <img src="https://placehold.co/400x300/bbf7d0/15803d?text=Paru-paru+Utuh" alt="Paru-paru" class="w-full h-full object-cover">
+                                <div class="md:w-2/5 bg-green-50 flex justify-center items-center p-6 border-b md:border-b-0 md:border-r border-green-100">
+                                    <svg viewBox="0 0 100 100" class="w-full h-auto max-h-48 drop-shadow-sm">
+                                        <!-- Trakea -->
+                                        <path d="M50,10 L50,30" stroke="#16A34A" stroke-width="6" stroke-linecap="round"/>
+                                        <!-- Bentuk Paru-paru -->
+                                        <path d="M45,30 C25,25 10,50 15,80 C18,90 45,95 45,80 Z" fill="#86EFAC" stroke="#15803D" stroke-width="3"/>
+                                        <path d="M55,30 C75,25 90,50 85,80 C82,90 55,95 55,80 Z" fill="#86EFAC" stroke="#15803D" stroke-width="3"/>
+                                        <!-- Garis tekstur -->
+                                        <path d="M25,50 Q35,60 20,70" stroke="#4ADE80" stroke-width="3" fill="none" stroke-linecap="round"/>
+                                        <path d="M75,50 Q65,60 80,70" stroke="#4ADE80" stroke-width="3" fill="none" stroke-linecap="round"/>
+                                    </svg>
                                 </div>
                                 <div class="p-6 md:w-3/5 flex flex-col justify-center">
                                     <div class="flex items-center gap-3 mb-3">
@@ -386,9 +492,21 @@
                         <div class="space-y-6">
                             <!-- Inspirasi -->
                             <div class="bg-white rounded-2xl shadow-sm border border-blue-200 overflow-hidden flex flex-col md:flex-row hover:shadow-md transition duration-300">
-                                <div class="md:w-2/5 relative">
-                                    <img src="https://placehold.co/400x300/bfdbfe/1e3a8a?text=Menghirup+Udara+(Inspirasi)" alt="Inspirasi" class="w-full h-full object-cover">
-                                    <div class="absolute top-2 left-2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Tahap 1</div>
+                                <div class="md:w-2/5 relative bg-blue-50 flex justify-center items-center p-6 border-b md:border-b-0 md:border-r border-blue-200">
+                                    <svg viewBox="0 0 100 100" class="w-full h-auto max-h-48">
+                                        <!-- Paru-paru Mengembang -->
+                                        <path d="M50,15 L50,35" stroke="#1D4ED8" stroke-width="4" stroke-linecap="round"/>
+                                        <path d="M45,35 C15,30 5,60 10,90 C12,98 45,98 45,80 Z" fill="#93C5FD" stroke="#2563EB" stroke-width="2"/>
+                                        <path d="M55,35 C85,30 95,60 90,90 C88,98 55,98 55,80 Z" fill="#93C5FD" stroke="#2563EB" stroke-width="2"/>
+                                        <!-- Diafragma Mendatar -->
+                                        <path d="M5,95 Q50,90 95,95" stroke="#EF4444" stroke-width="5" fill="none" stroke-linecap="round"/>
+                                        <!-- Panah Udara Masuk -->
+                                        <path d="M50,0 L50,15 M45,10 L50,15 L55,10" stroke="#1D4ED8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <!-- Panah Dada Membesar -->
+                                        <path d="M25,60 L10,60 M15,55 L10,60 L15,65" stroke="#1D4ED8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M75,60 L90,60 M85,55 L90,60 L85,65" stroke="#1D4ED8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <div class="absolute top-2 left-2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow">Tahap 1</div>
                                 </div>
                                 <div class="p-6 md:w-3/5 flex flex-col justify-center bg-blue-50">
                                     <h4 class="font-bold text-2xl text-blue-800 mb-3"><i class="fas fa-arrow-down mr-2"></i>Inspirasi (Menghirup Udara)</h4>
@@ -404,9 +522,21 @@
 
                             <!-- Ekspirasi -->
                             <div class="bg-white rounded-2xl shadow-sm border border-red-200 overflow-hidden flex flex-col md:flex-row hover:shadow-md transition duration-300">
-                                <div class="md:w-2/5 md:order-2 relative">
-                                    <img src="https://placehold.co/400x300/fecaca/991b1b?text=Mengembuskan+Udara+(Ekspirasi)" alt="Ekspirasi" class="w-full h-full object-cover">
-                                    <div class="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Tahap 2</div>
+                                <div class="md:w-2/5 md:order-2 relative bg-red-50 flex justify-center items-center p-6 border-b md:border-b-0 md:border-l border-red-200">
+                                    <svg viewBox="0 0 100 100" class="w-full h-auto max-h-48">
+                                        <!-- Paru-paru Mengempis -->
+                                        <path d="M50,15 L50,35" stroke="#991B1B" stroke-width="4" stroke-linecap="round"/>
+                                        <path d="M45,35 C30,35 25,55 25,75 C27,85 45,85 45,75 Z" fill="#FCA5A5" stroke="#DC2626" stroke-width="2"/>
+                                        <path d="M55,35 C70,35 75,55 75,75 C73,85 55,85 55,75 Z" fill="#FCA5A5" stroke="#DC2626" stroke-width="2"/>
+                                        <!-- Diafragma Melengkung ke Atas -->
+                                        <path d="M15,90 Q50,60 85,90" stroke="#EF4444" stroke-width="5" fill="none" stroke-linecap="round"/>
+                                        <!-- Panah Udara Keluar -->
+                                        <path d="M50,15 L50,0 M45,5 L50,0 L55,5" stroke="#991B1B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <!-- Panah Dada Mengecil -->
+                                        <path d="M10,60 L25,60 M20,55 L25,60 L20,65" stroke="#991B1B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M90,60 L75,60 M80,55 L75,60 L80,65" stroke="#991B1B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <div class="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow">Tahap 2</div>
                                 </div>
                                 <div class="p-6 md:w-3/5 flex flex-col justify-center bg-red-50 md:order-1">
                                     <h4 class="font-bold text-2xl text-red-800 mb-3"><i class="fas fa-arrow-up mr-2"></i>Ekspirasi (Mengembuskan Udara)</h4>
