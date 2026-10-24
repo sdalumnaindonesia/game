@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cara Tubuh Bernapas - SD Alumna & SDN 39 </title>
+    <title>Cara Tubuh Bernapas - SD Penantang Juara</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -79,7 +79,7 @@
     <aside id="sidebar" class="bg-gradient-to-b from-green-500 to-emerald-700 text-white w-72 flex-shrink-0 h-full flex flex-col transition-transform duration-300 transform -translate-x-full md:translate-x-0 fixed md:relative z-30 shadow-2xl">
         <div class="p-6 border-b border-green-400/50 flex justify-between items-center">
             <div>
-                <h2 class="text-xl font-bold font-nunito tracking-wide">SD Alumna & SDN 39 </h2>
+                <h2 class="text-xl font-bold font-nunito tracking-wide">SD Penantang Juara</h2>
                 <p class="text-green-100 text-sm mt-1"><i class="fas fa-user-tie mr-2"></i>KKG Sindara</p>
             </div>
             <button class="md:hidden text-white hover:text-green-200" onclick="toggleSidebar()">
@@ -284,7 +284,7 @@
                                 <!-- Pohon -->
                                 <rect x="280" y="80" width="15" height="70" fill="#78350F" rx="3"/>
                                 <circle cx="290" cy="70" r="35" fill="#10B981"/>
-                                <circle cx="260" cy="90" r="25" fill="#059639"/>
+                                <circle cx="260" cy="90" r="25" fill="#059669"/>
                                 <circle cx="320" cy="90" r="25" fill="#047857"/>
                                 <!-- Tanah -->
                                 <rect y="130" width="400" height="20" fill="#22C55E"/>
@@ -715,7 +715,7 @@
                         </div>
                         <div class="mb-6">
                             <label class="block text-slate-700 font-bold mb-2">Asal Sekolah</label>
-                            <input type="text" id="reg-school" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500" value="SD Alumna & SDN 39 " readonly>
+                            <input type="text" id="reg-school" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500" value="SD Penantang Juara" readonly>
                         </div>
                         <button onclick="startQuiz()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl btn-bouncy shadow-md text-lg">
                             MULAI LATIHAN
@@ -907,19 +907,17 @@
     </div>
 
 
-    <!-- Firebase Scripts Sesuai Instruksi -->
+    <!-- Firebase & Database Fallback Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Konfigurasi Environment Firebase (Di-inject oleh sistem)
+        // Konfigurasi Environment Firebase
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ipa-kelas-6-app';
         let firebaseConfig = {};
         try {
-            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-                /* fallback empty config untuk mencegah crash error JS murni jika tidak ada env */
-            };
+            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         } catch(e) {}
 
         // Global Firebase references
@@ -927,64 +925,95 @@
         window.auth = null;
         window.appId = appId;
         window.userReady = false;
+        window.isUsingLocalDB = false; // Penanda jika menggunakan penyimpanan lokal
 
-        // Initialize only if config looks valid (has projectId)
+        // Initialize only if config looks valid
         if (firebaseConfig && firebaseConfig.projectId) {
             try {
                 const app = initializeApp(firebaseConfig);
                 window.db = getFirestore(app);
                 window.auth = getAuth(app);
                 
-                // Auth Routine
                 const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                
                 if (initialToken) {
                     signInWithCustomToken(window.auth, initialToken)
                         .then(() => { window.userReady = true; fetchScores(); })
-                        .catch(err => console.log("Custom auth error"));
+                        .catch(err => enableLocalDB());
                 } else {
                     signInAnonymously(window.auth)
                         .then(() => { window.userReady = true; fetchScores(); })
-                        .catch(err => console.log("Anon auth error"));
+                        .catch(err => enableLocalDB());
                 }
             } catch (error) {
-                console.error("Firebase init error:", error);
+                console.error("Firebase init error, switching to Local DB:", error);
+                enableLocalDB();
             }
+        } else {
+            // Jika dipublish dan tidak ada config cloud, gunakan Local DB
+            enableLocalDB();
+        }
+
+        function enableLocalDB() {
+            window.isUsingLocalDB = true;
+            window.userReady = true;
+            console.log("Menggunakan Penyimpanan Lokal (Offline/Published Mode)");
+            fetchScores();
         }
         
-        // Expose Firebase functions to global scope for the rest of JS to use
-        window.saveToFirestore = async function(collectionName, data) {
-            if (!window.userReady || !window.auth.currentUser || !window.db) return false;
-            try {
-                const colRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', collectionName);
-                await addDoc(colRef, {
+        // Expose Database functions to global scope
+        window.saveToDatabase = async function(collectionName, data) {
+            if (window.isUsingLocalDB) {
+                // Simpan ke LocalStorage
+                let localData = JSON.parse(localStorage.getItem(window.appId + '_' + collectionName) || '[]');
+                localData.push({
                     ...data,
                     timestamp: new Date().getTime(),
-                    userId: window.auth.currentUser.uid
+                    id: Math.random().toString(36).substr(2, 9)
                 });
+                localStorage.setItem(window.appId + '_' + collectionName, JSON.stringify(localData));
                 return true;
-            } catch (e) {
-                console.error("Error saving doc:", e);
-                return false;
+            } else if (window.db && window.auth.currentUser) {
+                // Simpan ke Cloud Firebase
+                try {
+                    const colRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', collectionName);
+                    await addDoc(colRef, {
+                        ...data,
+                        timestamp: new Date().getTime(),
+                        userId: window.auth.currentUser.uid
+                    });
+                    return true;
+                } catch (e) {
+                    console.error("Error saving doc:", e);
+                    return false;
+                }
             }
+            return false;
         };
 
-        window.fetchScoresFromFirestore = function(callback) {
-            if (!window.userReady || !window.auth.currentUser || !window.db) return;
-            try {
-                const colRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'scores');
-                // Aturan No 2: No Complex Queries. Fetch all, sort in memory.
-                onSnapshot(colRef, (snapshot) => {
-                    const data = [];
-                    snapshot.forEach(doc => {
-                        data.push(doc.data());
+        window.fetchScoresFromDatabase = function(callback) {
+            if (window.isUsingLocalDB) {
+                // Ambil dari LocalStorage
+                let localData = JSON.parse(localStorage.getItem(window.appId + '_scores') || '[]');
+                callback(localData, true); // true menandakan data lokal
+            } else if (window.db && window.auth.currentUser) {
+                // Ambil dari Cloud Firebase
+                try {
+                    const colRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'scores');
+                    onSnapshot(colRef, (snapshot) => {
+                        const data = [];
+                        snapshot.forEach(doc => {
+                            data.push(doc.data());
+                        });
+                        callback(data, false);
+                    }, (error) => {
+                        console.error("Snapshot error:", error);
+                        // Fallback jika cloud gagal di tengah jalan
+                        let localData = JSON.parse(localStorage.getItem(window.appId + '_scores') || '[]');
+                        callback(localData, true);
                     });
-                    callback(data);
-                }, (error) => {
-                    console.error("Snapshot error:", error);
-                });
-            } catch(e) {
-                console.error("Error setting up snapshot:", e);
+                } catch(e) {
+                    console.error("Error setting up snapshot:", e);
+                }
             }
         };
     </script>
@@ -995,7 +1024,7 @@
         let studentData = {
             name: "",
             className: "VI",
-            school: "SD Alumna & SDN 39 ",
+            school: "SD Penantang Juara",
             hasData: false
         };
 
@@ -1557,16 +1586,16 @@
             else if (skorKuis >= 50) msgEl.innerText = "Kerja bagus! Kamu sudah di jalan yang benar. Sedikit latihan lagi kamu pasti bisa ahli!";
             else msgEl.innerText = "Jangan menyerah! Setiap ahli pernah melakukan kesalahan. Mari belajar materi ini sekali lagi, kamu pasti bisa!";
 
-            // Simpan ke Firestore
-            if(typeof window.saveToFirestore === 'function') {
-                window.saveToFirestore('scores', {
+            // Simpan ke Database (Otomatis deteksi Cloud / Local)
+            if(typeof window.saveToDatabase === 'function') {
+                window.saveToDatabase('scores', {
                     name: studentData.name,
                     className: studentData.className,
                     school: studentData.school,
                     score: skorKuis,
                     time: timeStr
                 }).then(success => {
-                    if(!success) console.log("Gagal simpan ke DB. Mungkin mode luring.");
+                    if(!success) console.log("Gagal simpan data.");
                 });
             }
         }
@@ -1576,15 +1605,23 @@
         function fetchScores() {
             const tBody = document.getElementById('score-table-body');
             
-            if(typeof window.fetchScoresFromFirestore === 'function') {
-                window.fetchScoresFromFirestore((data) => {
+            if(typeof window.fetchScoresFromDatabase === 'function') {
+                window.fetchScoresFromDatabase((data, isLocal) => {
                     tBody.innerHTML = '';
+                    
+                    // Tampilkan indikator jika menggunakan data lokal
+                    if(isLocal) {
+                        const infoRow = document.createElement('tr');
+                        infoRow.innerHTML = `<td colspan="5" class="p-2 text-center text-xs text-orange-600 bg-orange-50 font-bold border-b border-orange-100"><i class="fas fa-info-circle mr-1"></i> Mode Offline: Menampilkan data dari perangkat ini.</td>`;
+                        tBody.appendChild(infoRow);
+                    }
+
                     if(data.length === 0) {
-                        tBody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada data nilai. Jadilah yang pertama mengerjakan latihan!</td></tr>';
+                        tBody.innerHTML += '<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada data nilai. Jadilah yang pertama mengerjakan latihan!</td></tr>';
                         return;
                     }
                     
-                    // Sort descending by score in memory (Aturan Firestore: No complex queries)
+                    // Sort descending by score
                     data.sort((a,b) => b.score - a.score);
                     
                     data.forEach((item, index) => {
@@ -1634,9 +1671,9 @@
                 q3: q3
             };
 
-            // Simpan ke Firestore
-            if(typeof window.saveToFirestore === 'function') {
-                window.saveToFirestore('reflections', refleksiData);
+            // Simpan ke Database
+            if(typeof window.saveToDatabase === 'function') {
+                window.saveToDatabase('reflections', refleksiData);
             }
 
             // Tampilkan sukses
