@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GALAXY IMPACT: MATH EXPLORER</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Orbitron & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+            touch-action: none;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Glassmorphism Sci-Fi Panels */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.7);
+        }
+
+        .glass-panel-math {
+            background: rgba(10, 15, 30, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 2px solid rgba(129, 140, 248, 0.5);
+            box-shadow: 0 0 35px rgba(99, 102, 241, 0.35);
+        }
+
+        .glass-btn {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.25) 0%, rgba(99, 102, 241, 0.35) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-btn:hover {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.45) 0%, rgba(99, 102, 241, 0.55) 100%);
+            border-color: rgba(56, 189, 248, 0.9);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .glass-btn:active {
+            transform: translateY(1px);
+        }
+
+        .math-opt-btn {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1.5px solid rgba(99, 102, 241, 0.4);
+            transition: all 0.15s ease-in-out;
+        }
+
+        .math-opt-btn:hover {
+            background: rgba(99, 102, 241, 0.35);
+            border-color: #a5b4fc;
+            box-shadow: 0 0 15px rgba(129, 140, 248, 0.5);
+            transform: scale(1.02);
+        }
+
+        /* Neon animations */
+        @keyframes neonGlow {
+            0%, 100% { text-shadow: 0 0 8px #38bdf8, 0 0 18px #38bdf8, 0 0 30px #818cf8; }
+            50% { text-shadow: 0 0 14px #38bdf8, 0 0 28px #38bdf8, 0 0 45px #818cf8; }
+        }
+
+        .neon-text {
+            animation: neonGlow 2.5s infinite ease-in-out;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .scanlines {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        .bar-transition {
+            transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Pulse animation for timer bar */
+        @keyframes timerPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .timer-active {
+            animation: timerPulse 0.8s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex justify-center items-center relative overflow-hidden bg-slate-950">
+
+    <!-- Main Game Container -->
+    <div id="gameContainer" class="relative w-full h-full max-w-lg mx-auto bg-slate-950 shadow-2xl overflow-hidden flex flex-col border-x border-slate-800">
+        
+        <!-- Game Canvas -->
+        <canvas id="gameCanvas" class="w-full h-full absolute inset-0 z-0"></canvas>
+        <div class="scanlines absolute inset-0 z-10 opacity-30 pointer-events-none"></div>
+
+        <!-- IN-GAME HUD -->
+        <div id="hud" class="absolute top-0 left-0 w-full p-4 z-20 flex justify-between items-start pointer-events-none hidden">
+            <!-- Left Side: Health & Shield & Math Power -->
+            <div class="flex flex-col gap-2 w-48">
+                <!-- Health Bar -->
+                <div>
+                    <div class="flex justify-between text-xs font-orbitron font-semibold text-emerald-400 mb-0.5">
+                        <span><i class="fa-solid fa-heart text-red-500 mr-1"></i>HULL HP</span>
+                        <span id="hpText">100%</span>
+                    </div>
+                    <div class="w-full bg-slate-900/90 rounded-full h-3 border border-slate-700 overflow-hidden p-0.5 shadow">
+                        <div id="hpBar" class="bg-gradient-to-r from-red-600 via-emerald-500 to-emerald-400 h-full rounded-full bar-transition" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Shield Bar -->
+                <div>
+                    <div class="flex justify-between text-xs font-orbitron font-semibold text-sky-300 mb-0.5">
+                        <span><i class="fa-solid fa-shield-halved text-sky-400 mr-1"></i>PERISAI</span>
+                        <span id="shieldText">100%</span>
+                    </div>
+                    <div class="w-full bg-slate-900/90 rounded-full h-2.5 border border-slate-700 overflow-hidden p-0.5 shadow">
+                        <div id="shieldBar" class="bg-gradient-to-r from-cyan-500 to-indigo-500 h-full rounded-full bar-transition" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Overdrive / Math Charge Bar -->
+                <div>
+                    <div class="flex justify-between text-[10px] font-orbitron font-bold text-amber-400 mb-0.5">
+                        <span><i class="fa-solid fa-bolt text-amber-400 mr-1"></i>MATH OVERDRIVE</span>
+                        <span id="overdriveText">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-900/90 rounded-full h-2 border border-slate-700 overflow-hidden p-0.5">
+                        <div id="overdriveBar" class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full rounded-full bar-transition" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Score, Combo & Pause -->
+            <div class="flex flex-col items-end">
+                <div class="text-[10px] text-slate-400 font-orbitron uppercase tracking-widest">Skor Penjelajah</div>
+                <div id="scoreDisplay" class="text-2xl font-black font-orbitron text-cyan-400 tracking-wider drop-shadow-md">0</div>
+                <div id="comboDisplay" class="text-xs font-orbitron text-indigo-300 font-bold bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-500/40 mt-1 shadow">
+                    KOMBO: <span id="comboMultiplierText" class="text-amber-400">1x</span>
+                </div>
+                
+                <button id="pauseBtn" class="pointer-events-auto mt-2 bg-slate-800/80 text-cyan-400 border border-cyan-500/40 p-2 rounded-lg hover:bg-slate-700 active:scale-95 transition">
+                    <i class="fa-solid fa-pause text-sm w-4 h-4 flex items-center justify-center"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Boss Health Bar Overlay -->
+        <div id="bossHud" class="absolute top-20 left-1/2 -translate-x-1/2 w-4/5 z-20 pointer-events-none hidden">
+            <div class="flex justify-between text-xs font-orbitron text-red-400 font-bold mb-1">
+                <span class="animate-pulse"><i class="fa-solid fa-skull mr-1"></i>BOSS ALIEN DREADNOUGHT</span>
+                <span id="bossHpText">100%</span>
+            </div>
+            <div class="w-full bg-slate-900 border-2 border-red-500/80 rounded-full h-4 overflow-hidden p-0.5 shadow-lg shadow-red-900/50">
+                <div id="bossHpBar" class="bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 h-full rounded-full bar-transition" style="width: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-none opacity-0 transition-all duration-300 transform scale-95 text-center">
+            <span id="toastText" class="px-5 py-2.5 rounded-full glass-panel text-cyan-300 font-orbitron font-bold text-sm tracking-wide border border-cyan-400 shadow-2xl inline-block">
+                SISTEM ONLINE!
+            </span>
+        </div>
+
+        <!-- In-Game Math Overdrive / Bomb Trigger Button -->
+        <button id="overdriveTriggerBtn" class="absolute bottom-6 right-6 z-20 glass-panel border-2 border-amber-400/80 text-amber-300 p-4 rounded-full shadow-2xl active:scale-90 transition hidden pointer-events-auto flex flex-col items-center justify-center">
+            <i class="fa-solid fa-brain text-2xl animate-bounce"></i>
+            <span class="text-[9px] font-orbitron font-black mt-0.5 text-amber-400">MATH BOMB</span>
+        </button>
+
+        <!-- 1. MAIN MENU SCREEN -->
+        <div id="menuScreen" class="absolute inset-0 z-30 flex flex-col justify-between p-6 bg-slate-950/95 backdrop-blur-md">
+            <div class="mt-6 text-center">
+                <div class="inline-block px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-400 text-[11px] font-orbitron tracking-widest uppercase mb-2">
+                    Edukasi Sci-Fi Space Shooter
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-black font-orbitron tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-amber-400 neon-text leading-none">
+                    GALAXY IMPACT<br><span class="text-2xl sm:text-3xl text-indigo-400">MATH EXPLORER</span>
+                </h1>
+                <p class="text-slate-400 text-xs mt-2 font-medium">Jawab soal matematika untuk mengaktifkan senjata & bertahan hidup!</p>
+            </div>
+
+            <!-- Difficulty & Ship Selection -->
+            <div class="my-auto space-y-4">
+                <!-- Difficulty Selection -->
+                <div>
+                    <div class="text-xs font-orbitron text-cyan-400 text-center mb-2 tracking-wider uppercase"><i class="fa-solid fa-graduation-cap mr-1"></i>Tingkat Kesulitan Matematika</div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="diff-btn p-2.5 rounded-xl glass-panel text-center cursor-pointer border-2 border-cyan-400 bg-cyan-950/40 transition" data-diff="easy">
+                            <div class="text-xs font-orbitron font-bold text-emerald-400">PRAJURIT</div>
+                            <div class="text-[9px] text-slate-400 mt-0.5">Tambah & Kurang</div>
+                        </button>
+                        <button class="diff-btn p-2.5 rounded-xl glass-panel text-center cursor-pointer border border-slate-700 hover:border-indigo-400 transition" data-diff="medium">
+                            <div class="text-xs font-orbitron font-bold text-indigo-400">KAPTEN</div>
+                            <div class="text-[9px] text-slate-400 mt-0.5">Kali & Bagi</div>
+                        </button>
+                        <button class="diff-btn p-2.5 rounded-xl glass-panel text-center cursor-pointer border border-slate-700 hover:border-amber-400 transition" data-diff="hard">
+                            <div class="text-xs font-orbitron font-bold text-amber-400">KOMANDAN</div>
+                            <div class="text-[9px] text-slate-400 mt-0.5">Campuran & Aljabar</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ship Selection -->
+                <div>
+                    <div class="text-xs font-orbitron text-cyan-400 text-center mb-2 tracking-wider uppercase"><i class="fa-solid fa-rocket mr-1"></i>Pilih Pesawat Tempur</div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="ship-card p-2.5 rounded-xl glass-panel text-center cursor-pointer border-2 border-cyan-400 bg-cyan-950/30 transition" data-ship="0">
+                            <div class="text-xl text-cyan-400 mb-0.5"><i class="fa-solid fa-jet-fighter-up"></i></div>
+                            <div class="text-[11px] font-orbitron font-bold text-white">SPECTOR</div>
+                            <div class="text-[9px] text-slate-400">Seimbang</div>
+                        </div>
+                        <div class="ship-card p-2.5 rounded-xl glass-panel text-center cursor-pointer border border-slate-700 hover:border-cyan-400/50 transition" data-ship="1">
+                            <div class="text-xl text-indigo-400 mb-0.5"><i class="fa-solid fa-shuttle-space"></i></div>
+                            <div class="text-[11px] font-orbitron font-bold text-white">PHANTOM</div>
+                            <div class="text-[9px] text-slate-400">Cepat</div>
+                        </div>
+                        <div class="ship-card p-2.5 rounded-xl glass-panel text-center cursor-pointer border border-slate-700 hover:border-cyan-400/50 transition" data-ship="2">
+                            <div class="text-xl text-amber-400 mb-0.5"><i class="fa-solid fa-plane-slash"></i></div>
+                            <div class="text-[11px] font-orbitron font-bold text-white">TITAN</div>
+                            <div class="text-[9px] text-slate-400">Tebal Armor</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start Button & Stats -->
+            <div class="space-y-3">
+                <div class="glass-panel p-2.5 rounded-xl flex justify-between items-center text-xs font-orbitron">
+                    <span class="text-slate-400"><i class="fa-solid fa-trophy text-amber-400 mr-1.5"></i>Skor Tertinggi</span>
+                    <span id="menuHighScore" class="text-amber-400 font-bold text-sm">0</span>
+                </div>
+
+                <button id="startBtn" class="w-full py-3.5 rounded-xl glass-btn font-orbitron font-bold text-cyan-300 text-base tracking-wider shadow-lg flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i> MULAI PENJELAJAHAN
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. MATH GATE MODAL (CALIBRATION / ENGINE LAUNCH) -->
+        <div id="calibrationModal" class="absolute inset-0 z-40 flex flex-col justify-center items-center p-6 bg-slate-950/90 backdrop-blur-xl hidden">
+            <div class="glass-panel-math p-6 rounded-2xl w-full max-w-sm text-center space-y-4 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full bg-indigo-600/30 text-indigo-300 text-[10px] font-orbitron font-bold py-1 border-b border-indigo-500/30 uppercase tracking-widest">
+                    <i class="fa-solid fa-sliders mr-1"></i> Kalibrasi Reaktor Pesawat
+                </div>
+
+                <div class="pt-3">
+                    <div class="text-xs font-orbitron text-slate-400 mb-1">Kemajuan Kalibrasi: <span id="calibProgressText" class="text-cyan-400 font-bold">1 / 3</span></div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 border border-slate-700 overflow-hidden">
+                        <div id="calibProgressBar" class="bg-gradient-to-r from-indigo-500 to-cyan-400 h-full rounded-full bar-transition" style="width: 33%;"></div>
+                    </div>
+                </div>
+
+                <!-- Question Box -->
+                <div class="bg-slate-900/90 p-4 rounded-xl border border-indigo-500/40 my-2">
+                    <div class="text-[11px] font-orbitron text-indigo-300 uppercase mb-1">Selesaikan Soal Untuk Meluncur</div>
+                    <div id="calibQuestion" class="text-2xl font-black font-orbitron text-amber-300 tracking-wider">12 + 15 = ?</div>
+                </div>
+
+                <!-- Answer Options (4 Buttons) -->
+                <div id="calibOptions" class="grid grid-cols-2 gap-2.5">
+                    <!-- Dynamic Answer Options inserted via JS -->
+                </div>
+
+                <div class="text-[10px] text-slate-400 font-medium pt-1">
+                    Petunjuk Keyboard: Tekan tombol <span class="text-cyan-400 font-bold">1, 2, 3, atau 4</span> untuk memilih cepat.
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. IN-GAME MATH OVERDRIVE / BOMB MODAL -->
+        <div id="overdriveModal" class="absolute inset-0 z-40 flex flex-col justify-center items-center p-6 bg-slate-950/90 backdrop-blur-xl hidden">
+            <div class="glass-panel-math p-6 rounded-2xl w-full max-w-sm text-center space-y-4 relative border-amber-500/60 shadow-amber-900/30">
+                <div class="flex justify-between items-center text-xs font-orbitron text-amber-400 font-bold border-b border-amber-500/30 pb-2">
+                    <span><i class="fa-solid fa-bolt mr-1 animate-pulse"></i> MATH OVERDRIVE BOMB</span>
+                    <span id="overdriveTimerText" class="text-red-400 font-black">10.0s</span>
+                </div>
+
+                <!-- Countdown Bar -->
+                <div class="w-full bg-slate-900 rounded-full h-2 border border-slate-700 overflow-hidden">
+                    <div id="overdriveTimerBar" class="bg-gradient-to-r from-amber-500 to-red-500 h-full rounded-full timer-active" style="width: 100%;"></div>
+                </div>
+
+                <div class="bg-slate-900/90 p-4 rounded-xl border border-amber-500/40">
+                    <div class="text-[11px] font-orbitron text-slate-300 uppercase mb-1">Selesaikan Untuk Memicu Ledakan EMP</div>
+                    <div id="overdriveQuestion" class="text-2xl font-black font-orbitron text-cyan-300 tracking-wider">7 x 8 = ?</div>
+                </div>
+
+                <div id="overdriveOptions" class="grid grid-cols-2 gap-2.5">
+                    <!-- Dynamic Options -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. IN-BETWEEN WAVES MATH UPGRADE MODAL -->
+        <div id="waveUpgradeModal" class="absolute inset-0 z-40 flex flex-col justify-center items-center p-6 bg-slate-950/90 backdrop-blur-xl hidden">
+            <div class="glass-panel-math p-6 rounded-2xl w-full max-w-sm text-center space-y-4 border-cyan-500/60">
+                <div class="text-xs font-orbitron font-bold text-cyan-400 uppercase tracking-wider border-b border-cyan-500/30 pb-2">
+                    <i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> WAVE <span id="clearedWaveNum">1</span> SELESAI!
+                </div>
+
+                <div class="text-xs text-slate-300">Jawab soal matematika ini dengan benar untuk mengambil Bonus Upgrade Pesawat!</div>
+
+                <div class="bg-slate-900/90 p-4 rounded-xl border border-cyan-500/40">
+                    <div id="waveQuestion" class="text-2xl font-black font-orbitron text-amber-300 tracking-wider">144 / 12 = ?</div>
+                </div>
+
+                <div id="waveOptions" class="grid grid-cols-2 gap-2.5">
+                    <!-- Dynamic Options -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. PAUSE OVERLAY -->
+        <div id="pauseScreen" class="absolute inset-0 z-30 flex flex-col justify-center items-center p-6 bg-slate-950/80 backdrop-blur-md hidden">
+            <div class="glass-panel p-6 rounded-2xl w-full max-w-xs text-center space-y-4">
+                <h2 class="text-2xl font-black font-orbitron text-cyan-400"><i class="fa-solid fa-pause mr-2"></i>DIJEDA</h2>
+                <div class="space-y-2 pt-2">
+                    <button id="resumeBtn" class="w-full py-3 rounded-xl glass-btn font-orbitron font-bold text-cyan-300 text-sm">
+                        LANJUTKAN
+                    </button>
+                    <button id="restartBtn" class="w-full py-3 rounded-xl glass-btn font-orbitron font-bold text-amber-300 text-sm">
+                        ULANGI GAME
+                    </button>
+                    <button id="soundToggleBtn" class="w-full py-3 rounded-xl glass-btn font-orbitron font-bold text-slate-300 text-sm flex items-center justify-center gap-2">
+                        <i id="soundIcon" class="fa-solid fa-volume-high"></i> Suara: ON
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. GAME OVER SCREEN -->
+        <div id="gameOverScreen" class="absolute inset-0 z-30 flex flex-col justify-center items-center p-6 bg-slate-950/90 backdrop-blur-lg hidden">
+            <div class="glass-panel p-6 rounded-2xl w-full max-w-xs text-center space-y-4 border-red-500/40">
+                <div class="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto text-2xl border border-red-500/50">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black font-orbitron text-red-500 tracking-wider">GAME OVER</h2>
+                    <p class="text-xs text-slate-400 mt-1">Pesawatmu hancur di pertempuran!</p>
+                </div>
+
+                <div class="bg-slate-900/80 p-3 rounded-xl space-y-2 text-left text-xs font-orbitron border border-slate-800">
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Skor Akhir:</span>
+                        <span id="finalScore" class="text-cyan-400 font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Skor Tertinggi:</span>
+                        <span id="finalHighScore" class="text-amber-400 font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Soal Terjawab:</span>
+                        <span id="finalMathSolved" class="text-emerald-400 font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Gelombang (Wave):</span>
+                        <span id="finalWave" class="text-indigo-400 font-bold">1</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2">
+                    <button id="playAgainBtn" class="w-full py-3 rounded-xl glass-btn font-orbitron font-bold text-cyan-300 text-sm">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> MAIN LAGI
+                    </button>
+                    <button id="backMenuBtn" class="w-full py-3 rounded-xl glass-btn font-orbitron font-bold text-slate-400 text-sm">
+                        MENU UTAMA
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Vanilla JavaScript Core Engine -->
+    <script>
+        // Web Audio API Sound Synthesizer
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playLaser() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(850, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.1);
+                } catch(e) {}
+            }
+
+            playExplosion(isLarge = false) {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const duration = isLarge ? 0.6 : 0.35;
+                    const bufferSize = this.ctx.sampleRate * duration;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(isLarge ? 350 : 700, this.ctx.currentTime);
+                    filter.frequency.linearRampToValueAtTime(40, this.ctx.currentTime + duration);
+
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(isLarge ? 0.35 : 0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    noise.start();
+                } catch(e) {}
+            }
+
+            playCorrect() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                        gain.gain.setValueAtTime(0.2, now + idx * 0.06);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now + idx * 0.06);
+                        osc.stop(now + idx * 0.06 + 0.25);
+                    });
+                } catch(e) {}
+            }
+
+            playWrong() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, now);
+                    osc.frequency.linearRampToValueAtTime(80, now + 0.3);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } catch(e) {}
+            }
+
+            playPowerup() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(900, now + 0.3);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } catch(e) {}
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        // Canvas Setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameContainer = document.getElementById('gameContainer');
+
+        let width = 0;
+        let height = 0;
+
+        function resizeCanvas() {
+            const rect = gameContainer.getBoundingClientRect();
+            width = rect.width;
+            height = rect.height;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Math Generator Class
+        class MathEngine {
+            static getRandomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            static generateQuestion(difficulty) {
+                let questionText = "";
+                let correctAnswer = 0;
+
+                if (difficulty === 'easy') {
+                    const isAdd = Math.random() < 0.5;
+                    if (isAdd) {
+                        const a = this.getRandomInt(10, 75);
+                        const b = this.getRandomInt(10, 75);
+                        questionText = `${a} + ${b} = ?`;
+                        correctAnswer = a + b;
+                    } else {
+                        const a = this.getRandomInt(25, 99);
+                        const b = this.getRandomInt(10, a - 1);
+                        questionText = `${a} - ${b} = ?`;
+                        correctAnswer = a - b;
+                    }
+                } else if (difficulty === 'medium') {
+                    const isMult = Math.random() < 0.5;
+                    if (isMult) {
+                        const a = this.getRandomInt(3, 14);
+                        const b = this.getRandomInt(3, 14);
+                        questionText = `${a} × ${b} = ?`;
+                        correctAnswer = a * b;
+                    } else {
+                        const b = this.getRandomInt(3, 12);
+                        const ans = this.getRandomInt(3, 12);
+                        const a = b * ans;
+                        questionText = `${a} ÷ ${b} = ?`;
+                        correctAnswer = ans;
+                    }
+                } else { // Hard (Komandan)
+                    const type = Math.random();
+                    if (type < 0.4) {
+                        const a = this.getRandomInt(3, 12);
+                        const b = this.getRandomInt(3, 9);
+                        const c = this.getRandomInt(5, 25);
+                        questionText = `${a} × ${b} + ${c} = ?`;
+                        correctAnswer = a * b + c;
+                    } else if (type < 0.7) {
+                        const a = this.getRandomInt(4, 12);
+                        const b = this.getRandomInt(3, 9);
+                        const c = this.getRandomInt(2, 15);
+                        questionText = `${a} × ${b} - ${c} = ?`;
+                        correctAnswer = a * b - c;
+                    } else {
+                        // Algebra: ax + b = c
+                        const x = this.getRandomInt(2, 12);
+                        const a = this.getRandomInt(2, 6);
+                        const b = this.getRandomInt(2, 18);
+                        const c = a * x + b;
+                        questionText = `${a}x + ${b} = ${c},  x = ?`;
+                        correctAnswer = x;
+                    }
+                }
+
+                // Generate Options (1 correct, 3 wrong distractors)
+                let options = new Set();
+                options.add(correctAnswer);
+
+                while (options.size < 4) {
+                    let offset = this.getRandomInt(-8, 8);
+                    if (offset === 0) offset = this.getRandomInt(1, 4) * (Math.random() < 0.5 ? 1 : -1);
+                    let fake = correctAnswer + offset;
+                    if (fake >= 0) options.add(fake);
+                }
+
+                let optionsArr = Array.from(options);
+                // Shuffle Array
+                for (let i = optionsArr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [optionsArr[i], optionsArr[j]] = [optionsArr[j], optionsArr[i]];
+                }
+
+                return {
+                    questionText,
+                    correctAnswer,
+                    options: optionsArr
+                };
+            }
+        }
+
+        // Global Game Variables
+        let gameState = 'MENU'; // MENU, CALIBRATION, PLAYING, MATH_OVERDRIVE, WAVE_UPGRADE, PAUSED, GAMEOVER
+        let mathDifficulty = 'easy';
+        let selectedShipIndex = 0;
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('galaxy_math_highscore') || '0');
+        let wave = 1;
+        let mathSolvedCount = 0;
+        let comboMultiplier = 1;
+        let screenShake = 0;
+
+        // Calibration State
+        let calibStep = 0;
+        const totalCalibSteps = 3;
+        let currentCalibData = null;
+
+        // Overdrive State
+        let currentOverdriveData = null;
+        let overdriveTimer = 10.0;
+        let overdriveInterval = null;
+
+        // Wave Upgrade State
+        let currentWaveData = null;
+
+        // UI References
+        const hud = document.getElementById('hud');
+        const bossHud = document.getElementById('bossHud');
+        const hpBar = document.getElementById('hpBar');
+        const hpText = document.getElementById('hpText');
+        const shieldBar = document.getElementById('shieldBar');
+        const shieldText = document.getElementById('shieldText');
+        const overdriveBar = document.getElementById('overdriveBar');
+        const overdriveText = document.getElementById('overdriveText');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const comboMultiplierText = document.getElementById('comboMultiplierText');
+        const menuHighScore = document.getElementById('menuHighScore');
+        const overdriveTriggerBtn = document.getElementById('overdriveTriggerBtn');
+
+        menuHighScore.textContent = highScore.toLocaleString();
+
+        // Ship Presets
+        const SHIP_PRESETS = [
+            { name: 'SPECTOR', speed: 6.2, maxHp: 100, maxShield: 100, color: '#38bdf8', fireRate: 14, width: 36, height: 44 },
+            { name: 'PHANTOM', speed: 7.8, maxHp: 80, maxShield: 80, color: '#818cf8', fireRate: 9, width: 32, height: 40 },
+            { name: 'TITAN', speed: 4.8, maxHp: 160, maxShield: 120, color: '#fbbf24', fireRate: 18, width: 44, height: 48 }
+        ];
+
+        class Player {
+            constructor(preset) {
+                this.x = width / 2;
+                this.y = height - 100;
+                this.preset = preset;
+                this.speed = preset.speed;
+                this.maxHp = preset.maxHp;
+                this.hp = preset.maxHp;
+                this.maxShield = preset.maxShield;
+                this.shield = preset.maxShield;
+                this.width = preset.width;
+                this.height = preset.height;
+                this.color = preset.color;
+                this.fireTimer = 0;
+                this.weaponLevel = 1;
+                this.overdriveMeter = 0; // 0 to 100
+                this.overdriveActiveTimer = 0; // Duration of super plasma
+                this.invulnerableTimer = 0;
+                this.shieldRechargeTimer = 0;
+            }
+
+            update(keys, touchTarget) {
+                // Movement Keys
+                if (keys['ArrowLeft'] || keys['KeyA']) this.x -= this.speed;
+                if (keys['ArrowRight'] || keys['KeyD']) this.x += this.speed;
+                if (keys['ArrowUp'] || keys['KeyW']) this.y -= this.speed;
+                if (keys['ArrowDown'] || keys['KeyS']) this.y += this.speed;
+
+                // Touch / Mouse Drag
+                if (touchTarget) {
+                    const dx = touchTarget.x - this.x;
+                    const dy = touchTarget.y - this.y;
+                    this.x += dx * 0.22;
+                    this.y += dy * 0.22;
+                }
+
+                // Bounds Constraint
+                this.x = Math.max(this.width / 2, Math.min(width - this.width / 2, this.x));
+                this.y = Math.max(this.height / 2, Math.min(height - this.height / 2, this.y));
+
+                // Auto Firing
+                this.fireTimer++;
+                const actualFireRate = this.overdriveActiveTimer > 0 ? 5 : this.preset.fireRate;
+                if (this.fireTimer >= actualFireRate) {
+                    this.fireTimer = 0;
+                    this.shoot();
+                }
+
+                if (this.overdriveActiveTimer > 0) {
+                    this.overdriveActiveTimer--;
+                }
+
+                if (this.invulnerableTimer > 0) this.invulnerableTimer--;
+
+                // Shield Auto Recharge
+                this.shieldRechargeTimer++;
+                if (this.shieldRechargeTimer > 160 && this.shield < this.maxShield) {
+                    this.shield = Math.min(this.maxShield, this.shield + 0.25);
+                }
+            }
+
+            shoot() {
+                sound.playLaser();
+                const bSpeed = -12;
+                const isPlasma = this.overdriveActiveTimer > 0;
+                const bulletColor = isPlasma ? '#f59e0b' : this.color;
+
+                if (isPlasma) {
+                    // Super Triple Overdrive Plasma
+                    bullets.push(new Bullet(this.x - 14, this.y - 10, -1.5, bSpeed, true, bulletColor, 5));
+                    bullets.push(new Bullet(this.x, this.y - this.height / 2, 0, bSpeed - 2, true, bulletColor, 6));
+                    bullets.push(new Bullet(this.x + 14, this.y - 10, 1.5, bSpeed, true, bulletColor, 5));
+                } else if (this.weaponLevel === 1) {
+                    bullets.push(new Bullet(this.x, this.y - this.height / 2, 0, bSpeed, true, bulletColor));
+                } else if (this.weaponLevel === 2) {
+                    bullets.push(new Bullet(this.x - 10, this.y - 8, 0, bSpeed, true, bulletColor));
+                    bullets.push(new Bullet(this.x + 10, this.y - 8, 0, bSpeed, true, bulletColor));
+                } else {
+                    bullets.push(new Bullet(this.x, this.y - this.height / 2, 0, bSpeed, true, bulletColor));
+                    bullets.push(new Bullet(this.x - 12, this.y - 4, -1.8, bSpeed, true, bulletColor));
+                    bullets.push(new Bullet(this.x + 12, this.y - 4, 1.8, bSpeed, true, bulletColor));
+                }
+
+                // Exhaust particles
+                particles.push(new Particle(this.x, this.y + this.height / 2, (Math.random() - 0.5) * 1.5, Math.random() * 3 + 2, isPlasma ? '#f59e0b' : '#38bdf8', 10, 3));
+            }
+
+            takeDamage(amount) {
+                if (this.invulnerableTimer > 0) return;
+
+                screenShake = 12;
+                this.shieldRechargeTimer = 0;
+
+                if (this.shield > 0) {
+                    if (this.shield >= amount) {
+                        this.shield -= amount;
+                    } else {
+                        const rem = amount - this.shield;
+                        this.shield = 0;
+                        this.hp -= rem;
+                    }
+                } else {
+                    this.hp -= amount;
+                }
+
+                if (this.hp <= 0) {
+                    this.hp = 0;
+                    triggerGameOver();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                if (this.invulnerableTimer > 0 && Math.floor(Date.now() / 60) % 2 === 0) {
+                    ctx.globalAlpha = 0.5;
+                }
+
+                // Overdrive Aura
+                if (this.overdriveActiveTimer > 0) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.width * 1.1, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(245, 158, 11, ${0.5 + Math.sin(Date.now() / 100) * 0.3})`;
+                    ctx.lineWidth = 3;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#f59e0b';
+                    ctx.stroke();
+                }
+
+                // Shield Bubble
+                if (this.shield > 0) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.width * 0.85, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(56, 189, 248, ${0.4 + (this.shield / this.maxShield) * 0.5})`;
+                    ctx.lineWidth = 2;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.stroke();
+                }
+
+                // Ship Body
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = this.color;
+
+                ctx.beginPath();
+                ctx.moveTo(0, -this.height / 2);
+                ctx.lineTo(this.width / 2, this.height / 2);
+                ctx.lineTo(this.width / 4, this.height / 3);
+                ctx.lineTo(0, this.height / 2 - 4);
+                ctx.lineTo(-this.width / 4, this.height / 3);
+                ctx.lineTo(-this.width / 2, this.height / 2);
+                ctx.closePath();
+                ctx.fill();
+
+                // Cockpit Glass
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.ellipse(0, -this.height / 6, 4, 10, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        class Bullet {
+            constructor(x, y, vx, vy, isPlayer = false, color = '#38bdf8', radius = 3.5) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.isPlayer = isPlayer;
+                this.color = color;
+                this.radius = radius;
+                this.markedForDeletion = false;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < -20 || this.x > width + 20 || this.y < -20 || this.y > height + 20) {
+                    this.markedForDeletion = true;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class Enemy {
+            constructor(type = 'scout') {
+                this.type = type;
+                this.x = Math.random() * (width - 60) + 30;
+                this.y = -40;
+                this.markedForDeletion = false;
+                this.shootTimer = Math.random() * 60;
+
+                if (type === 'scout') {
+                    this.hp = 25;
+                    this.maxHp = 25;
+                    this.vy = Math.random() * 1.5 + 2.2;
+                    this.vx = Math.sin(Date.now() / 200) * 1.5;
+                    this.width = 28;
+                    this.height = 28;
+                    this.color = '#f43f5e';
+                    this.scoreValue = 100;
+                } else if (type === 'chaser') {
+                    this.hp = 40;
+                    this.maxHp = 40;
+                    this.vy = 2.8;
+                    this.vx = 0;
+                    this.width = 32;
+                    this.height = 32;
+                    this.color = '#a855f7';
+                    this.scoreValue = 180;
+                } else if (type === 'heavy') {
+                    this.hp = 120;
+                    this.maxHp = 120;
+                    this.vy = 1.0;
+                    this.vx = Math.random() < 0.5 ? 1 : -1;
+                    this.width = 46;
+                    this.height = 46;
+                    this.color = '#f97316';
+                    this.scoreValue = 350;
+                }
+            }
+
+            update() {
+                this.y += this.vy;
+
+                if (this.type === 'heavy') {
+                    this.x += this.vx;
+                    if (this.x < 30 || this.x > width - 30) this.vx *= -1;
+                }
+
+                this.shootTimer++;
+                if (this.shootTimer > (this.type === 'heavy' ? 65 : 110)) {
+                    this.shootTimer = 0;
+                    this.shoot();
+                }
+
+                if (this.y > height + 50) this.markedForDeletion = true;
+            }
+
+            shoot() {
+                if (this.type === 'scout') {
+                    bullets.push(new Bullet(this.x, this.y + this.height / 2, 0, 5, false, '#f43f5e'));
+                } else if (this.type === 'heavy') {
+                    bullets.push(new Bullet(this.x - 12, this.y + this.height / 2, -1, 4.5, false, '#f97316'));
+                    bullets.push(new Bullet(this.x + 12, this.y + this.height / 2, 1, 4.5, false, '#f97316'));
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+
+                ctx.beginPath();
+                ctx.moveTo(0, this.height / 2);
+                ctx.lineTo(-this.width / 2, -this.height / 2);
+                ctx.lineTo(0, -this.height / 4);
+                ctx.lineTo(this.width / 2, -this.height / 2);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        class MathPod {
+            constructor() {
+                this.x = Math.random() * (width - 80) + 40;
+                this.y = -40;
+                this.vy = 1.5;
+                this.radius = 18;
+                this.markedForDeletion = false;
+                this.symbol = ['∑', 'π', '√', 'x'][Math.floor(Math.random() * 4)];
+            }
+
+            update() {
+                this.y += this.vy;
+                if (this.y > height + 40) this.markedForDeletion = true;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Glowing Math Pod
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(99, 102, 241, 0.3)';
+                ctx.strokeStyle = '#818cf8';
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#818cf8';
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#f59e0b';
+                ctx.font = 'bold 14px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.symbol, 0, 1);
+
+                ctx.restore();
+            }
+        }
+
+        class Boss {
+            constructor() {
+                this.x = width / 2;
+                this.y = -100;
+                this.targetY = 110;
+                this.hp = 850 + wave * 300;
+                this.maxHp = this.hp;
+                this.width = 96;
+                this.height = 76;
+                this.color = '#ef4444';
+                this.phaseTimer = 0;
+                this.markedForDeletion = false;
+                this.vx = 2.2;
+            }
+
+            update() {
+                if (this.y < this.targetY) {
+                    this.y += 2;
+                    return;
+                }
+
+                this.x += this.vx;
+                if (this.x < 60 || this.x > width - 60) this.vx *= -1;
+
+                this.phaseTimer++;
+                if (this.phaseTimer % 40 === 0) {
+                    for (let angle = -0.4; angle <= 0.4; angle += 0.2) {
+                        bullets.push(new Bullet(this.x, this.y + 30, Math.sin(angle) * 4, Math.cos(angle) * 5, false, '#ef4444'));
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#ef4444';
+
+                ctx.beginPath();
+                ctx.moveTo(0, this.height / 2);
+                ctx.lineTo(-this.width / 2, 0);
+                ctx.lineTo(-this.width / 3, -this.height / 2);
+                ctx.lineTo(this.width / 3, -this.height / 2);
+                ctx.lineTo(this.width / 2, 0);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(0, 0, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, vx, vy, color, maxLife = 20, size = 3) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.color = color;
+                this.maxLife = maxLife;
+                this.life = maxLife;
+                this.size = size;
+                this.markedForDeletion = false;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+                if (this.life <= 0) this.markedForDeletion = true;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life / this.maxLife;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        class Star {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * height;
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = 0;
+                this.size = Math.random() * 2 + 0.5;
+                this.speed = this.size * 1.5;
+                this.color = Math.random() < 0.25 ? '#818cf8' : '#ffffff';
+            }
+
+            update() {
+                this.y += this.speed;
+                if (this.y > height) this.reset();
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = 0.6;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // Global Game Arrays
+        let player = null;
+        let bullets = [];
+        let enemies = [];
+        let mathPods = [];
+        let particles = [];
+        let stars = Array.from({ length: 65 }, () => new Star());
+        let boss = null;
+        let waveTimer = 0;
+
+        // Input Controller State
+        const keys = {};
+        let touchTarget = null;
+
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+
+            // Shortcut keys 1, 2, 3, 4 for Math Modals Answers
+            if (['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Numpad1', 'Numpad2', 'Numpad3', 'Numpad4'].includes(e.code)) {
+                let optIdx = 0;
+                if (e.code.includes('1')) optIdx = 0;
+                if (e.code.includes('2')) optIdx = 1;
+                if (e.code.includes('3')) optIdx = 2;
+                if (e.code.includes('4')) optIdx = 3;
+
+                if (gameState === 'CALIBRATION') handleCalibAnswer(optIdx);
+                else if (gameState === 'MATH_OVERDRIVE') handleOverdriveAnswer(optIdx);
+                else if (gameState === 'WAVE_UPGRADE') handleWaveAnswer(optIdx);
+            }
+
+            if (e.code === 'Space' && gameState === 'PLAYING') {
+                triggerMathOverdriveModal();
+            }
+        });
+        window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+        // Touch handling
+        gameContainer.addEventListener('pointerdown', e => {
+            if (gameState !== 'PLAYING') return;
+            const rect = gameContainer.getBoundingClientRect();
+            touchTarget = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        });
+        gameContainer.addEventListener('pointermove', e => {
+            if (gameState !== 'PLAYING' || !touchTarget) return;
+            const rect = gameContainer.getBoundingClientRect();
+            touchTarget = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        });
+        gameContainer.addEventListener('pointerup', () => { touchTarget = null; });
+
+        function showToast(text) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toastText');
+            toastText.textContent = text;
+            toast.classList.remove('opacity-0', 'scale-95');
+            toast.classList.add('opacity-100', 'scale-100');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'scale-100');
+                toast.classList.add('opacity-0', 'scale-95');
+            }, 1500);
+        }
+
+        function updateHUD() {
+            if (!player) return;
+
+            const hpPct = Math.max(0, Math.round((player.hp / player.maxHp) * 100));
+            const shieldPct = Math.max(0, Math.round((player.shield / player.maxShield) * 100));
+            const odPct = Math.max(0, Math.round(player.overdriveMeter));
+
+            hpBar.style.width = hpPct + '%';
+            hpText.textContent = hpPct + '%';
+
+            shieldBar.style.width = shieldPct + '%';
+            shieldText.textContent = shieldPct + '%';
+
+            overdriveBar.style.width = odPct + '%';
+            overdriveText.textContent = odPct + '%';
+
+            scoreDisplay.textContent = score.toLocaleString();
+            comboMultiplierText.textContent = comboMultiplier + 'x';
+
+            // Show overdrive button if meter is full (100%) or touch device
+            if (player.overdriveMeter >= 100) {
+                overdriveTriggerBtn.classList.remove('hidden');
+            } else {
+                overdriveTriggerBtn.classList.add('hidden');
+            }
+
+            // Boss HUD
+            if (boss) {
+                bossHud.classList.remove('hidden');
+                const bossHpPct = Math.max(0, Math.round((boss.hp / boss.maxHp) * 100));
+                document.getElementById('bossHpBar').style.width = bossHpPct + '%';
+                document.getElementById('bossHpText').textContent = bossHpPct + '%';
+            } else {
+                bossHud.classList.add('hidden');
+            }
+        }
+
+        // --- MATH GATE: CALIBRATION LOGIC ---
+        function startCalibration() {
+            gameState = 'CALIBRATION';
+            calibStep = 0;
+            document.getElementById('calibrationModal').classList.remove('hidden');
+            loadNextCalibQuestion();
+        }
+
+        function loadNextCalibQuestion() {
+            calibStep++;
+            if (calibStep > totalCalibSteps) {
+                // Calibration Complete! Launch ship into game
+                document.getElementById('calibrationModal').classList.add('hidden');
+                sound.playPowerup();
+                showToast("SISTEM REAKTOR ONLINE! MENGUDARA!");
+                launchGamePlay();
+                return;
+            }
+
+            document.getElementById('calibProgressText').textContent = `${calibStep} / ${totalCalibSteps}`;
+            document.getElementById('calibProgressBar').style.width = `${(calibStep / totalCalibSteps) * 100}%`;
+
+            currentCalibData = MathEngine.generateQuestion(mathDifficulty);
+            document.getElementById('calibQuestion').textContent = currentCalibData.questionText;
+
+            const optsContainer = document.getElementById('calibOptions');
+            optsContainer.innerHTML = '';
+            currentCalibData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'math-opt-btn p-3 rounded-xl font-orbitron font-bold text-cyan-300 text-sm flex items-center justify-between';
+                btn.innerHTML = `<span><span class="text-indigo-400 mr-2">${idx + 1}.</span> ${opt}</span>`;
+                btn.onclick = () => handleCalibAnswer(idx);
+                optsContainer.appendChild(btn);
+            });
+        }
+
+        function handleCalibAnswer(selectedIdx) {
+            if (gameState !== 'CALIBRATION' || !currentCalibData) return;
+
+            const chosen = currentCalibData.options[selectedIdx];
+            if (chosen === currentCalibData.correctAnswer) {
+                sound.playCorrect();
+                mathSolvedCount++;
+                loadNextCalibQuestion();
+            } else {
+                sound.playWrong();
+                screenShake = 10;
+                showToast("JAWABAN SALAH! COBA LAGI");
+                // Regenerate same step question
+                calibStep--;
+                loadNextCalibQuestion();
+            }
+        }
+
+        // --- IN-GAME MATH OVERDRIVE / BOMB LOGIC ---
+        function triggerMathOverdriveModal() {
+            if (gameState !== 'PLAYING') return;
+
+            gameState = 'MATH_OVERDRIVE';
+            document.getElementById('overdriveModal').classList.remove('hidden');
+            currentOverdriveData = MathEngine.generateQuestion(mathDifficulty);
+
+            document.getElementById('overdriveQuestion').textContent = currentOverdriveData.questionText;
+
+            const optsContainer = document.getElementById('overdriveOptions');
+            optsContainer.innerHTML = '';
+            currentOverdriveData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'math-opt-btn p-3 rounded-xl font-orbitron font-bold text-amber-300 text-sm flex items-center justify-between';
+                btn.innerHTML = `<span><span class="text-amber-500 mr-2">${idx + 1}.</span> ${opt}</span>`;
+                btn.onclick = () => handleOverdriveAnswer(idx);
+                optsContainer.appendChild(btn);
+            });
+
+            overdriveTimer = 10.0;
+            document.getElementById('overdriveTimerText').textContent = overdriveTimer.toFixed(1) + 's';
+            document.getElementById('overdriveTimerBar').style.width = '100%';
+
+            clearInterval(overdriveInterval);
+            overdriveInterval = setInterval(() => {
+                overdriveTimer -= 0.1;
+                if (overdriveTimer <= 0) {
+                    overdriveTimer = 0;
+                    clearInterval(overdriveInterval);
+                    handleOverdriveTimeout();
+                }
+                document.getElementById('overdriveTimerText').textContent = overdriveTimer.toFixed(1) + 's';
+                document.getElementById('overdriveTimerBar').style.width = (overdriveTimer / 10.0 * 100) + '%';
+            }, 100);
+        }
+
+        function handleOverdriveAnswer(selectedIdx) {
+            if (gameState !== 'MATH_OVERDRIVE' || !currentOverdriveData) return;
+            clearInterval(overdriveInterval);
+
+            const chosen = currentOverdriveData.options[selectedIdx];
+            document.getElementById('overdriveModal').classList.add('hidden');
+
+            if (chosen === currentOverdriveData.correctAnswer) {
+                sound.playCorrect();
+                mathSolvedCount++;
+                comboMultiplier++;
+                score += 500 * comboMultiplier;
+
+                // Execute EMP Bomb & Activate Plasma Overdrive Mode!
+                player.overdriveActiveTimer = 450; // ~7.5 seconds of super plasma
+                player.shield = player.maxShield; // Full shield recharge
+                player.overdriveMeter = 0;
+
+                // EMP Clear Enemy Bullets & Damage Enemies
+                bullets = bullets.filter(b => b.isPlayer);
+                enemies.forEach(e => {
+                    e.hp -= 200;
+                    createExplosion(e.x, e.y, '#f59e0b', 15);
+                    if (e.hp <= 0) e.markedForDeletion = true;
+                });
+
+                if (boss) {
+                    boss.hp -= 300;
+                    createExplosion(boss.x, boss.y, '#f59e0b', 25);
+                }
+
+                showToast(`MATH OVERDRIVE DIAKTIFKAN! +${500 * comboMultiplier} SKOR`);
+            } else {
+                sound.playWrong();
+                comboMultiplier = 1;
+                player.takeDamage(20);
+                player.overdriveMeter = 0;
+                showToast("GAGAL MEMICU OVERDRIVE!");
+            }
+
+            gameState = 'PLAYING';
+        }
+
+        function handleOverdriveTimeout() {
+            document.getElementById('overdriveModal').classList.add('hidden');
+            sound.playWrong();
+            comboMultiplier = 1;
+            player.overdriveMeter = 0;
+            showToast("WAKTU OVERDRIVE HABIS!");
+            gameState = 'PLAYING';
+        }
+
+        // --- IN-BETWEEN WAVES MATH UPGRADE LOGIC ---
+        function triggerWaveUpgradeModal() {
+            gameState = 'WAVE_UPGRADE';
+            document.getElementById('clearedWaveNum').textContent = wave;
+            document.getElementById('waveUpgradeModal').classList.remove('hidden');
+
+            currentWaveData = MathEngine.generateQuestion(mathDifficulty);
+            document.getElementById('waveQuestion').textContent = currentWaveData.questionText;
+
+            const optsContainer = document.getElementById('waveOptions');
+            optsContainer.innerHTML = '';
+            currentWaveData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'math-opt-btn p-3 rounded-xl font-orbitron font-bold text-emerald-300 text-sm flex items-center justify-between';
+                btn.innerHTML = `<span><span class="text-emerald-400 mr-2">${idx + 1}.</span> ${opt}</span>`;
+                btn.onclick = () => handleWaveAnswer(idx);
+                optsContainer.appendChild(btn);
+            });
+        }
+
+        function handleWaveAnswer(selectedIdx) {
+            if (gameState !== 'WAVE_UPGRADE' || !currentWaveData) return;
+
+            const chosen = currentWaveData.options[selectedIdx];
+            document.getElementById('waveUpgradeModal').classList.add('hidden');
+
+            if (chosen === currentWaveData.correctAnswer) {
+                sound.playCorrect();
+                mathSolvedCount++;
+                score += 1000;
+
+                // Grant Double Upgrade Bonus!
+                player.weaponLevel = Math.min(3, player.weaponLevel + 1);
+                player.hp = player.maxHp;
+                player.shield = player.maxShield;
+
+                showToast("UPGRADE FLEET BERHASIL! WEAPON & FULL REPAIR");
+            } else {
+                sound.playWrong();
+                // Minor upgrade only
+                player.hp = Math.min(player.maxHp, player.hp + 30);
+                showToast("JAWABAN SALAH! REPARASI MINIMAL");
+            }
+
+            wave++;
+            gameState = 'PLAYING';
+        }
+
+        function createExplosion(x, y, color = '#f97316', count = 18) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 1;
+                particles.push(new Particle(
+                    x, y,
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed,
+                    color,
+                    Math.floor(Math.random() * 20 + 15),
+                    Math.random() * 4 + 2
+                ));
+            }
+        }
+
+        function spawnEnemies() {
+            waveTimer++;
+
+            if (!boss && waveTimer > 90 && enemies.length < 4 + Math.floor(wave * 0.8)) {
+                waveTimer = 0;
+                const r = Math.random();
+                if (r < 0.45) enemies.push(new Enemy('scout'));
+                else if (r < 0.75) enemies.push(new Enemy('chaser'));
+                else enemies.push(new Enemy('heavy'));
+
+                // Random Math Pod Spawn
+                if (Math.random() < 0.25 && mathPods.length < 2) {
+                    mathPods.push(new MathPod());
+                }
+            }
+
+            // Spawn Boss
+            if (score >= wave * 2800 && !boss) {
+                boss = new Boss();
+                showToast("⚠️ WARN: BOSS ALIEN DREADNOUGHT!");
+            }
+        }
+
+        function checkCollisions() {
+            // Player Bullets hitting enemies & Math Pods
+            bullets.forEach(b => {
+                if (!b.isPlayer) return;
+
+                enemies.forEach(e => {
+                    if (Math.hypot(b.x - e.x, b.y - e.y) < b.radius + e.width / 2) {
+                        b.markedForDeletion = true;
+                        e.hp -= (b.radius > 4 ? 40 : 25);
+                        createExplosion(b.x, b.y, '#38bdf8', 4);
+
+                        if (e.hp <= 0) {
+                            e.markedForDeletion = true;
+                            score += e.scoreValue * comboMultiplier;
+                            player.overdriveMeter = Math.min(100, player.overdriveMeter + 12);
+                            sound.playExplosion(false);
+                            createExplosion(e.x, e.y, e.color, 16);
+                        }
+                    }
+                });
+
+                // Hitting Math Pods
+                mathPods.forEach(mp => {
+                    if (Math.hypot(b.x - mp.x, b.y - mp.y) < b.radius + mp.radius) {
+                        b.markedForDeletion = true;
+                        mp.markedForDeletion = true;
+                        sound.playPowerup();
+                        triggerMathOverdriveModal();
+                    }
+                });
+
+                // Hitting Boss
+                if (boss && Math.hypot(b.x - boss.x, b.y - boss.y) < b.radius + boss.width / 2) {
+                    b.markedForDeletion = true;
+                    boss.hp -= (b.radius > 4 ? 40 : 25);
+                    createExplosion(b.x, b.y, '#fef08a', 4);
+
+                    if (boss.hp <= 0) {
+                        score += 2500 * comboMultiplier;
+                        sound.playExplosion(true);
+                        createExplosion(boss.x, boss.y, '#ef4444', 45);
+                        boss = null;
+                        triggerWaveUpgradeModal();
+                    }
+                }
+            });
+
+            // Enemy bullets hitting Player
+            bullets.forEach(b => {
+                if (b.isPlayer) return;
+
+                if (Math.hypot(b.x - player.x, b.y - player.y) < b.radius + player.width / 3) {
+                    b.markedForDeletion = true;
+                    player.takeDamage(15);
+                    sound.playExplosion(false);
+                    createExplosion(player.x, player.y, '#ef4444', 8);
+                }
+            });
+
+            // Enemies colliding with Player
+            enemies.forEach(e => {
+                if (Math.hypot(e.x - player.x, e.y - player.y) < e.width / 2 + player.width / 3) {
+                    e.markedForDeletion = true;
+                    player.takeDamage(28);
+                    sound.playExplosion(true);
+                    createExplosion(e.x, e.y, e.color, 20);
+                }
+            });
+        }
+
+        function gameLoop() {
+            if (gameState === 'PLAYING') {
+                ctx.fillStyle = '#020617';
+                ctx.fillRect(0, 0, width, height);
+
+                ctx.save();
+                if (screenShake > 0) {
+                    ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+                    screenShake *= 0.9;
+                    if (screenShake < 0.5) screenShake = 0;
+                }
+
+                // Render Stars
+                stars.forEach(s => {
+                    s.update();
+                    s.draw();
+                });
+
+                // Render Player
+                if (player) {
+                    player.update(keys, touchTarget);
+                    player.draw();
+                }
+
+                // Render Bullets
+                bullets.forEach(b => b.update());
+                bullets = bullets.filter(b => !b.markedForDeletion);
+                bullets.forEach(b => b.draw());
+
+                // Render Enemies
+                spawnEnemies();
+                enemies.forEach(e => e.update());
+                enemies = enemies.filter(e => !e.markedForDeletion);
+                enemies.forEach(e => e.draw());
+
+                // Render Math Pods
+                mathPods.forEach(mp => mp.update());
+                mathPods = mathPods.filter(mp => !mp.markedForDeletion);
+                mathPods.forEach(mp => mp.draw());
+
+                // Render Boss
+                if (boss) {
+                    boss.update();
+                    boss.draw();
+                }
+
+                // Render Particles
+                particles.forEach(p => p.update());
+                particles = particles.filter(p => !p.markedForDeletion);
+                particles.forEach(p => p.draw());
+
+                checkCollisions();
+                updateHUD();
+
+                ctx.restore();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function launchGamePlay() {
+            hud.classList.remove('hidden');
+            gameState = 'PLAYING';
+        }
+
+        function prepareGameStart() {
+            sound.init();
+            score = 0;
+            wave = 1;
+            mathSolvedCount = 0;
+            comboMultiplier = 1;
+            waveTimer = 0;
+            bullets = [];
+            enemies = [];
+            mathPods = [];
+            particles = [];
+            boss = null;
+
+            player = new Player(SHIP_PRESETS[selectedShipIndex]);
+
+            document.getElementById('menuScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('pauseScreen').classList.add('hidden');
+
+            startCalibration();
+        }
+
+        function triggerGameOver() {
+            gameState = 'GAMEOVER';
+            sound.playExplosion(true);
+
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('galaxy_math_highscore', highScore.toString());
+            }
+
+            document.getElementById('finalScore').textContent = score.toLocaleString();
+            document.getElementById('finalHighScore').textContent = highScore.toLocaleString();
+            document.getElementById('finalMathSolved').textContent = mathSolvedCount;
+            document.getElementById('finalWave').textContent = wave;
+
+            hud.classList.add('hidden');
+            overdriveTriggerBtn.classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+        }
+
+        // --- UI & CLICK HANDLERS ---
+        // Difficulty Selection Buttons
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.diff-btn').forEach(b => {
+                    b.classList.remove('border-2', 'border-cyan-400', 'bg-cyan-950/40');
+                    b.classList.add('border-slate-700');
+                });
+                btn.classList.add('border-2', 'border-cyan-400', 'bg-cyan-950/40');
+                btn.classList.remove('border-slate-700');
+                mathDifficulty = btn.dataset.diff;
+            });
+        });
+
+        // Ship Selection Cards
+        document.querySelectorAll('.ship-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.ship-card').forEach(c => {
+                    c.classList.remove('border-2', 'border-cyan-400', 'bg-cyan-950/30');
+                    c.classList.add('border-slate-700');
+                });
+                card.classList.add('border-2', 'border-cyan-400', 'bg-cyan-950/30');
+                card.classList.remove('border-slate-700');
+                selectedShipIndex = parseInt(card.dataset.ship);
+            });
+        });
+
+        document.getElementById('startBtn').addEventListener('click', prepareGameStart);
+        document.getElementById('playAgainBtn').addEventListener('click', prepareGameStart);
+        document.getElementById('backMenuBtn').addEventListener('click', () => {
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('menuScreen').classList.remove('hidden');
+            menuHighScore.textContent = highScore.toLocaleString();
+            gameState = 'MENU';
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            gameState = 'PAUSED';
+            document.getElementById('pauseScreen').classList.remove('hidden');
+        });
+
+        document.getElementById('resumeBtn').addEventListener('click', () => {
+            document.getElementById('pauseScreen').classList.add('hidden');
+            gameState = 'PLAYING';
+        });
+
+        document.getElementById('restartBtn').addEventListener('click', prepareGameStart);
+
+        document.getElementById('soundToggleBtn').addEventListener('click', () => {
+            sound.enabled = !sound.enabled;
+            const icon = document.getElementById('soundIcon');
+            const btn = document.getElementById('soundToggleBtn');
+            if (sound.enabled) {
+                icon.className = 'fa-solid fa-volume-high';
+                btn.innerHTML = `<i class="fa-solid fa-volume-high"></i> Suara: ON`;
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark';
+                btn.innerHTML = `<i class="fa-solid fa-volume-xmark"></i> Suara: OFF`;
+            }
+        });
+
+        overdriveTriggerBtn.addEventListener('click', triggerMathOverdriveModal);
+
+        // Start Canvas Engine Loop
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
