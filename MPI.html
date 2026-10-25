@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Lab Sains IPAS - KKG SINDARA KEC. SAIL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Nunito', sans-serif; }
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(14, 165, 233, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(14, 165, 233, 0.05) 1px, transparent 1px);
+        }
+        
+        /* Animasi Transisi Iframe */
+        #module-frame {
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col bg-slate-50 bg-grid text-slate-800">
+
+    <!-- Header & Navigasi Dropdown -->
+    <header class="bg-white/90 backdrop-blur-md shadow-md border-b border-slate-200 p-4 z-20 flex flex-col md:flex-row items-center justify-between gap-4">
+        
+        <!-- Logo & Judul Portal -->
+        <div class="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
+            <div class="w-12 h-12 bg-gradient-to-br from-teal-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                <i class="fas fa-microscope text-2xl pulse-anim"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-slate-800 leading-tight">Portal Lab Sains IPAS</h1>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">KKG SINDARA KEC. SAIL</p>
+            </div>
+        </div>
+
+        <!-- Fungsi Dropdown & Fullscreen -->
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <label for="module-selector" class="font-bold text-slate-600 hidden md:block whitespace-nowrap">
+                <i class="fas fa-book-open text-blue-500 mr-1"></i> Pilih Modul:
+            </label>
+            
+            <div class="relative flex-1 md:w-80">
+                <select id="module-selector" onchange="changeModule()" class="w-full appearance-none bg-slate-100 border-2 border-slate-300 text-slate-700 py-3 px-4 pr-10 rounded-xl font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer shadow-sm text-sm md:text-base">
+                    <option value="Pencernaan.html">Sistem Pencernaan Manusia</option>
+                    <option value="Pernafasan.html">Sistem Pernapasan Manusia</option>
+                    <option value="Peredaran Darah.html">Sistem Peredaran Darah</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+
+            <!-- Tombol Fullscreen -->
+            <button id="fullscreen-btn" onclick="toggleFullscreen()" class="bg-slate-100 hover:bg-slate-200 border-2 border-slate-300 text-slate-700 w-12 h-12 rounded-xl transition-all shadow-sm focus:outline-none focus:border-blue-500 flex items-center justify-center" title="Layar Penuh">
+                <i class="fas fa-expand text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Kontainer Penampil Modul (Iframe) -->
+    <main class="flex-1 w-full relative z-10 bg-transparent">
+        <iframe id="module-frame" src="Pernafasan.html" class="w-full h-full border-none" title="Modul Pembelajaran IPAS"></iframe>
+    </main>
+
+    <!-- Skrip Fungsi Ganti Modul & Fullscreen -->
+    <script>
+        // Fungsi Ganti Modul
+        function changeModule() {
+            const selector = document.getElementById('module-selector');
+            const frame = document.getElementById('module-frame');
+            
+            frame.style.opacity = '0.3';
+            
+            setTimeout(() => {
+                frame.src = selector.value;
+                frame.onload = () => {
+                    frame.style.opacity = '1';
+                };
+            }, 200);
+        }
+
+        // Fungsi Fullscreen
+        function toggleFullscreen() {
+            const elem = document.documentElement; // Membuat seluruh halaman index menjadi fullscreen
+
+            if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                // Masuk Fullscreen
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                } else if (elem.mozRequestFullScreen) {
+                    elem.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                }
+            } else {
+                // Keluar Fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        }
+
+        // Event Listener untuk mengganti ikon saat status fullscreen berubah (misal user menekan tombol ESC)
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+        document.addEventListener('mozfullscreenchange', updateFullscreenIcon);
+        document.addEventListener('MSFullscreenChange', updateFullscreenIcon);
+
+        function updateFullscreenIcon() {
+            const icon = document.querySelector('#fullscreen-btn i');
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+                // Jika sedang fullscreen, ubah ikon menjadi 'compress' (mengecil)
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+            } else {
+                // Jika tidak fullscreen, ubah ikon menjadi 'expand' (membesar)
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand');
+            }
+        }
+    </script>
+</body>
+</html>
